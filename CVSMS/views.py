@@ -268,17 +268,27 @@ def file_RAID_view(request,id):
     return render(request,'file-RAID.html',context=context)
 
 
-def file_Delete_view(request, id=None): 
-    file_delete = get_object_or_404(Files, id=id, owner=request.user)
+class deleteThread(threading.Thread): 
+    def __init__(self,obj): 
+        threading.Thread.__init__(self)
+        self.obj = obj
+    def run(self): 
+        self.obj.delete()  
+        time.sleep(5)
+        print(f'Deleted file!')  
     
+def file_Delete_view(request, id): 
+    file = Files.objects.get(id=id)
     if request.method == "POST": 
-        file_delete.delete()
-        # success_url = reverse('/')
-        # return redirect(success_url)
-    context={
-        "file": file_delete
-    }
-    return render(request,'file-delete.html',context=context)
+        delete = deleteThread(file)   
+        delete.start()    
+        
+        return home_view(request)
+        # return redirect(success_url
+    context = {
+         "file":file
+     }
+    return render(request,'file-delete.html',context)
 
 
     

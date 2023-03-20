@@ -4,7 +4,7 @@
 {% block content %}
 
 {% if file %}
-<form action="." method="post">
+<form  method="POST">
     {% csrf_token %}
     <p>Are you sure you want to delete {{ file.fileName }}</p>
 
