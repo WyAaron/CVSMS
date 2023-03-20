@@ -17,7 +17,17 @@ def file_path(instance,filename):
 
 
 
-class Files(models.Model): 
+class Files(models.Model):
+    
+    RAID_TYPE_CHOICES = [
+        ('NONE', "NONE"),
+        ('PARITY', "PARITY"),
+        ('1', "1"),
+        ('0', "0"),
+        
+    ]
+    #0,1,P default = none 
+
     owner = models.CharField(User, null=True,blank=True,max_length=300)
     FID = models.IntegerField(null=True)
     SID = models.IntegerField(null=True)
@@ -25,7 +35,7 @@ class Files(models.Model):
     file = models.FileField(null=True,upload_to=file_path)    
     actualSize = models.IntegerField(null=True)
     start = models.IntegerField(null=True)
-    RAIDtype = models.IntegerField(null=True,default=-1)
+    RAIDtype = models.CharField(null=True,choices=RAID_TYPE_CHOICES,default="NONE",max_length=7)
     RAIDid = models.IntegerField(null=True,default=-1)
     
 

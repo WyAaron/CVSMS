@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+
+
+{% block content %}
+<h1>RAID your file </h1>
+<h4>File Name: {{file.fileName}}</h4>
+<h4>Size {{file.actualSize | filesizeformat}}</h4>
+<p></p>
+
+<form  method="POST" enctype="multipart/form-data">
+
+    {% csrf_token %}
+    {{form.as_p}}
+
+    <button type="submit" >RAID!</button>
+</form>
+
+{% endblock content %}

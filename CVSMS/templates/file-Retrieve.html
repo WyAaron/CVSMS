@@ -1,9 +1,13 @@
 {% extends "base.html" %}
 
 
-{% block content %}
-<h1>Retrieving {{file.fileName}} </h1>
+{% endblock javascript %}
 
+
+
+{% block content %}
+
+<h1>Retrieving {{file.fileName}} </h1>
 <h1>File Ready for Downlaod </h1>
 
 {% if button == False %}
@@ -16,4 +20,10 @@
 
 
 
+
+
+
 {% endblock content %}
+
+
+

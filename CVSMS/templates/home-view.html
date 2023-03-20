@@ -5,7 +5,7 @@
 
 {% if request.user.is_authenticated %}
 
-<h1>File List</h1>
+
 <!-- search bar -->
 <!-- <form action="/file" method="GET">
     <input type="text" name="q">
@@ -14,7 +14,42 @@
 
 
 
+{% if request.user.is_superuser %}
+<h1>Master List</h1>
+<table class="table">
+    
+    <thead>    
+        <tr>
+            <th scope="col" >Owner</th>
+            <th scope="col">File Name</th>
+            <th scope="col">Size</th>
+            <th scope="col">Downlad</th>
+            <th scope="col">Delete </th>
+            <th scope="col" >RAID TYPE</th>
 
+        </tr>
+    </thead>
+    <tbody>
+    {% for file in file_list %}
+    <tr>
+        
+        <th scope="row">{{file.owner}}</th>
+        <td>{{file.fileName}}</td>
+        <td> {{file.actualSize | filesizeformat }} </td>
+        <td>  <a class="download-link" href="{% url 'file-retrieve' file.id  %}" > 	<i class="bi bi-cloud-download"   ></i></a>  </td>
+        <td><a href="{% url 'file-delete' file.id   %}"><i class="bi bi-trash3"></i></a></td>
+        <td><a href="{% url 'file-RAID' file.id %}">{{file.RAIDtype}}</a></td>
+        {% empty %}
+        <h3>No Files in List</h3>
+        
+        {% endfor %}    
+    </tr>
+    </tbody>
+
+</table>
+
+{% else %}
+<h1>File List</h1>
 <table class="table">
     
     <thead>    
@@ -43,12 +78,10 @@
 
 </table>
 
-<script>
-    function click( ){
-        alert("hello")
-    }
 
-</script>
+
+{% endif %}
+
 
 
 

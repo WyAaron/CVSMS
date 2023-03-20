@@ -10,3 +10,9 @@ class FileForm(ModelForm):
     class Meta:
         model = Files
         fields = ['file']
+        
+class RAIDForm(ModelForm): 
+    
+    class Meta: 
+        model = Files
+        fields = ['RAIDtype']
