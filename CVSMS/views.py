@@ -11,7 +11,7 @@ from django.http import HttpResponse
 from django.contrib import messages
 import time 
 import threading
-import multiprocessing
+
 # Create your views here.
 
 
@@ -61,10 +61,29 @@ def fileSearch_view(request):
     }
     return render(request, 'search.html', context=context)
 
-
+class SFTPThread(threading.Thread):
+    def __init__(self, message, storageNode):
+        # execute the base constructor
+        threading.Thread.__init__(self)
+        # store the value
+        self.storageNode = storageNode
+        self.message = message
+    # override the run function
+    def run(self):
+        time.sleep(2)
+        # TODO: Change to SFTP function
+        if self.message["command"] == "upload":
+            sSFTP.upload(self.message, self.storageNode)
+        else:
+            sSFTP.download(self.message, self.storageNode)
+        # block for a moment
+        # display a message
+        
+        
+        
 #### Uploading of file
 @login_required
-def file_Upload_view(request): 
+def file_Upload_view(request):
     context = {
         "form": FileForm()
     }
@@ -82,7 +101,7 @@ def file_Upload_view(request):
                 
                 "SID":1,
                 "AllocSize":1000,
-                "IP":"192.168.1.21",
+                "IP":"192.168.0.225",
                 "PORT":5001,
             }
             
@@ -95,16 +114,16 @@ def file_Upload_view(request):
             "cwd" : cwd,
             "command":"upload"
             }
-            #TODO: upload to Storage Node
-            
+            messages.info(request,f'File has been uploaded!')
             try:
                 
-                sSFTP.upload(message, storageNode)
-                success = True
+                t1 = SFTPThread(message, storageNode)
+                t1.start()
+
                 
             except Exception as e:
                 #Todo Function when false it must delete file from db 
-                success = False
+                print(e)
             
             
             #CREATE DB ENTRY FOR FILE SAVED
@@ -132,21 +151,7 @@ def file_Download_view(request):
 
 
 
-class SFTPThread(threading.Thread):
-    def __init__(self, storageNode,message):
-        # execute the base constructor
-        threading.Thread.__init__(self)
-        # store the value
-        self.storageNode = storageNode
-        self.message = message
-    # override the run function
-    def run(self):
-        time.sleep(2)
-        # TODO: Change to SFTP function
-        #TODO: implement in upload
-        print(f'storageNode: {self.storageNode}  \n Message: {self.message}')
-        # block for a moment
-        # display a message
+
 
 
 
@@ -158,20 +163,19 @@ def file_Retreive_view(request,id):
     obj =Files.objects.get(id=id)
     cwd = os.path.dirname(obj.file.path)
     url = obj.file.url
-    if  "/" in url :
-        urlList = url.split("/")
-        splitChar = "/"
-    else:
-        urlList = url.split("\\")
-        splitChar = "\\"
     
-    fName = urlList[len(urlList)-1]
-
+    
+    fName = os.path.split(url)[-1]
+    
+    if not os.path.exists(cwd):
+        os.mkdir(cwd)
+    else:
+        print("Directory Exists, Proceeding to SFTP")
     #TODO CONNECTED STORAGE NODES
     storageNode = {        
             "SID":1,
             "AllocSize":1000,
-            "IP":"192.168.1.21",
+            "IP":"192.168.0.225",
             "PORT":5001,
         }
     #GET DATA FROM DB
@@ -185,12 +189,12 @@ def file_Retreive_view(request,id):
         'button': False
     }
 
-
+    print(obj.file.path)
     
-    if not os.path.isfile(cwd+splitChar+fName): #condition for file DNE in server
+    if not os.path.isfile(os.path.join(cwd,fName)): #condition for file DNE in server
         messages.info(request,f'file started downloading from storage node.')
         # create the thread
-        thread = SFTPThread(storageNode,message)
+        thread = SFTPThread(message,storageNode)
         # start the thread
         thread.start()
         return redirect('/')
@@ -199,8 +203,8 @@ def file_Retreive_view(request,id):
 
         
         # disable download button
-    elif os.path.isfile(cwd+splitChar+fName): #condition if file is in server already
-        if os.path.getsize(cwd+splitChar+fName) == obj.actualSize: #File complete download from storage node
+    elif os.path.isfile(os.path.join(cwd,fName)): #condition if file is in server already
+        if os.path.getsize(os.path.join(cwd,fName)) == obj.actualSize: #File complete download from storage node
             if request.method == "GET": 
                 file_download = get_object_or_404(Files, pk = id )
                 response = HttpResponse(file_download.file, content_type='application/pdf')
@@ -214,7 +218,7 @@ def file_Retreive_view(request,id):
     return redirect('/')
 
 
-class testRAID(threading.Thread):
+class raidThread(threading.Thread):
     def __init__(self,obj,RAIDtype):
         # execute the base constructor
         threading.Thread.__init__(self)
@@ -251,7 +255,7 @@ def file_RAID_view(request,id):
         RAIDtype = request.POST["RAIDtype"]
         obj = Files.objects.get(id=id)
         if form.is_valid():
-            t1 = testRAID(obj,RAIDtype)
+            t1 = raidThread(obj,RAIDtype)
             t1.start()
             #VARIABLE#
             #INSERT FUNCTION YOUR Function
