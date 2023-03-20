@@ -88,12 +88,13 @@ def file_Upload_view(request):
             #TODO: upload to Storage Node
             
             try:
+                
                 sSFTP.upload(message, storageNode)
                 success = True
+                
             except Exception as e:
                 #Todo Function when false it must delete file from db 
                 success = False
-            
             
             
             #CREATE DB ENTRY FOR FILE SAVED
