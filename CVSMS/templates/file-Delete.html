@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+
+
+{% block content %}
+
+{% if file %}
+<form action="." method="post">
+    {% csrf_token %}
+    <p>Are you sure you want to delete {{ file.fileName }}</p>
+
+    <button type="submit">Yes, Delete!</button>
+</form>
+
+{% endif %}
+
+{% endblock content %}

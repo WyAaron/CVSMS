@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+
+{% block content %}
+{% csrf_token %}
+
+{% if request.user.is_authenticated %}
+
+<h1>File List</h1>
+<!-- search bar -->
+<!-- <form action="/file" method="GET">
+    <input type="text" name="q">
+    <input type="submit" >
+</form> -->
+
+
+
+
+<table class="table">
+    
+    <thead>    
+        <tr>
+            <th scope="col">File Name</th>
+            <th scope="col">Size</th>
+            <th scope="col">Downlad</th>
+            <th scope="col">Delete </th>
+        </tr>
+    </thead>
+    <tbody>
+    {% for file in file_list %}
+    <tr>
+        
+        <th scope="row">{{file.fileName}}</th>
+        <td> {{file.actualSize | filesizeformat }} </td>
+                                                            
+            <td>  <a class="download-link" href="{% url 'file-retrieve' file.id  %}" > 	<i class="bi bi-cloud-download"   ></i></a>  </td>
+            <td><a href="{% url 'file-delete' file.id   %}"><i class="bi bi-trash3"></i></a></td>
+        {% empty %}
+        <h3>No Files in List</h3>
+        
+        {% endfor %}    
+    </tr>
+    </tbody>
+
+</table>
+
+<script>
+    function click( ){
+        alert("hello")
+    }
+
+</script>
+
+
+
+{% else %}
+<p>Please <a href="{% url 'login' %}">Login</a> to See File List page </p>
+{% endif %}
+
+{% endblock content %}

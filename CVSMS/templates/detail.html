@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+
+
+{% block content %}
+
+{% if request.user.is_authenticated %}
+
+
+<h1> File Name: {{ object.fileName }}</h1>
+<p> Size: {{ object.actualSize }}</p>
+<p>start: {{ object.start }}</p>
+
+
+{% else %}
+<p>Please <a href="login/">Login</a> to See File List page </p>
+    
+{% endif %}
+{% endblock content %}
