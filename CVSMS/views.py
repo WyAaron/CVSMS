@@ -19,7 +19,6 @@ def home_view(request):
     context = {
         "file_list": Files.objects.filter(owner=request.user),
     }
-    print(f'{Files.objects.get_queryset()}')
     return  render(request,'home-view.html',context=context) 
 
 #TODO: dashboard for admin
@@ -156,12 +155,12 @@ def file_Retreive_view(request,id):
     # return True 
 
     # return False
-    if not os.path.isFile(cwd+splitChar+fName):
+    if not os.path.isfile(cwd+splitChar+fName):
         sSFTP.download()
         # alert("file started downloading)
 
 
-    elif os.path.isFile(cwd+splitChar+fName):
+    elif os.path.isfile(cwd+splitChar+fName):
         if os.path.getsize(cwd+splitChar+fName) == obj.actualSize:
             return render(request,'file-Download.html',{})
         else:
