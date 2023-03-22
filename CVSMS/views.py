@@ -6,11 +6,13 @@ from CVSMS.models import  Files
 from .forms import FileForm,RAIDForm
 from django.shortcuts import get_object_or_404
 import sSFTP
+import RAIDmod
 import os 
 from django.http import HttpResponse
 from django.contrib import messages
 import time 
 import threading
+import shutil
 
 # Create your views here.
 
@@ -74,8 +76,10 @@ class SFTPThread(threading.Thread):
         # TODO: Change to SFTP function
         if self.message["command"] == "upload":
             sSFTP.upload(self.message, self.storageNode)
-        else:
+        elif self.message["command"] == "download":
             sSFTP.download(self.message, self.storageNode)
+        else:
+            sSFTP.delete(self.message, self.storageNode)
         # block for a moment
         # display a message
         
@@ -184,12 +188,11 @@ def file_Retreive_view(request,id):
         "FID" : obj.FID,
         "cwd" : cwd,
         "command":"download"
-            }
+        }
     context = {
         'button': False
     }
 
-    print(obj.file.path)
     
     if not os.path.isfile(os.path.join(cwd,fName)): #condition for file DNE in server
         messages.info(request,f'file started downloading from storage node.')
@@ -219,12 +222,13 @@ def file_Retreive_view(request,id):
 
 
 class raidThread(threading.Thread):
-    def __init__(self,obj,RAIDtype):
+    def __init__(self,obj,RAIDtype, storageNodeList):
         # execute the base constructor
         threading.Thread.__init__(self)
         # store the value
         self.obj = obj
         self.RAIDtype = RAIDtype
+        self.storageNodeList = storageNodeList
     # override the run function
     def run(self):
         # TODO: Change to SFTP function
@@ -232,14 +236,186 @@ class raidThread(threading.Thread):
         FileToRaid = {
             'owner':self.obj.owner, 
             'FID': self.obj.FID, 
-            'fileName': self.obj.fileName, 
+            'fName': self.obj.fileName, 
             'file':self.obj.file,
             'actualSize': self.obj.actualSize,
             'RAIDtype': self.RAIDtype, 
-            "filePath": self.obj.file.path 
+            "filePath": os.path.dirname(self.obj.file.path)
             }
-        time.sleep(5)
-        print(f'FINISHED!')
+        
+        #CREATE FUNCTION TO FIND STORAGE NODE LOCATION OF FILE TO BE RAIDED
+        #storageNode = findStorage(self.storageNodeList, FID)
+        storageNode = {        
+                    "SID":1,
+                    "AllocSize":1000,
+                    "MaxSize": 1000,
+                    "IP":"192.168.0.225",
+                    "PORT":5001,
+            }
+        #SFTP THE FILE FROM THE STORAGE NODE
+        message = {
+            "fName": FileToRaid["fName"],
+            "FID" : FileToRaid["FID"],
+            "cwd" : FileToRaid["filePath"],
+            "command":"download"
+        }
+        
+    
+        if not os.path.exists(FileToRaid["filePath"]):
+            os.mkdir(FileToRaid["filePath"])
+        
+        if not os.path.isfile(self.obj.file.path):
+            sSFTP.download(message, storageNode)
+        else:
+            print("Did not download")
+        # #PERFORM RAID
+        
+        
+        
+        if self.RAIDtype == "0":
+            raid = RAIDmod.raid0
+            fileList = raid.split(FileToRaid["fName"],2,FileToRaid["filePath"])
+            
+            
+            storageNodeUploadList = [
+                {        
+                    "SID":1,
+                    "AllocSize":1000,
+                    "MaxSize": 1000,
+                    "IP":"192.168.0.225",
+                    "PORT":5002,
+                },
+                {        
+                    "SID":1,
+                    "AllocSize":1000,
+                    "MaxSize": 1000,
+                    "IP":"192.168.0.225",
+                    "PORT":5003,
+                }
+            ]
+            threads = []
+            #SEND THE SPLIT FILES TO THE STORAGE NODES
+            for i in range(len(fileList)):
+                
+                message = {
+                    "fName": fileList[i],
+                    "FID" : FileToRaid["FID"],
+                    "cwd" : FileToRaid["filePath"],
+                    "command":"upload"
+                }
+                try:
+                    t1 = SFTPThread(message, storageNodeUploadList[i])
+                    threads.append(t1)
+                    t1.start()
+                    
+                except Exception as e:
+                    #Todo Function when false it must delete file from db 
+                    print(e)
+
+            
+        elif self.RAIDtype == "1":
+            #upload to 2 storage nodes
+            storageNodeUploadList = [
+                {        
+                    "SID":1,
+                    "AllocSize":1000,
+                    "MaxSize": 1000,
+                    "IP":"192.168.0.225",
+                    "PORT":5002,
+                },
+                {        
+                    "SID":1,
+                    "AllocSize":1000,
+                    "MaxSize": 1000,
+                    "IP":"192.168.0.225",
+                    "PORT":5003,
+                }
+            ]
+            
+            threads = []
+            
+            #DUPLOCATE THE FILES TO THE STORAGE NODES
+            for i in range(2):
+                
+                message = {
+                    "fName": FileToRaid["fName"],
+                    "FID" : FileToRaid["FID"],
+                    "cwd" : FileToRaid["filePath"],
+                    "command":"upload"
+                }
+                try:
+                    t1 = SFTPThread(message, storageNodeUploadList[i])
+                    threads.append(t1)
+                    t1.start()
+                    
+                except Exception as e:
+                    #Todo Function when false it must delete file from db 
+                    print(e)
+       
+            
+        else:
+            raid = RAIDmod.pRAID()
+            
+            #storageNodeUploadList = get_Three_StorageNode_That_Can_Fit_The_File_Parts(self.storageNodeList, FileToRaid["fSize"])
+            storageNodeUploadList = [
+                {        
+                    "SID":1,
+                    "AllocSize":1000,
+                    "MaxSize": 1000,
+                    "IP":"192.168.0.225",
+                    "PORT":5002,
+                },
+                {        
+                    "SID":1,
+                    "AllocSize":1000,
+                    "MaxSize": 1000,
+                    "IP":"192.168.0.225",
+                    "PORT":5003,
+                },
+                {        
+                    "SID":1,
+                    "AllocSize":1000,
+                    "MaxSize": 1000,
+                    "IP":"192.168.0.225",
+                    "PORT":5004,
+                }
+            ]
+            fileList = raid.split(FileToRaid["fName"], FileToRaid["filePath"])
+            # print(fileList)
+            # #CREATE FUNCTION TO GENERATE LIST OF DIFFERENT STORAGE NODES
+            threads = []
+            
+            #SEND THE SPLIT FILES TO THE STORAGE NODES
+            for i in range(len(fileList)):
+                message = {
+                    "fName": fileList[i],
+                    "FID" : FileToRaid["FID"],
+                    "cwd" : FileToRaid["filePath"],
+                    "command":"upload"
+                }
+                try:
+                    t1 = SFTPThread(message, storageNodeUploadList[i])
+                    threads.append(t1)
+                    t1.start()
+                except Exception as e:
+                    print(e)
+
+                
+            
+        #clean up files from server cache
+        # shutil.rmtree(FileToRaid["filePath"])
+        
+        #DELETE FROM OIGINAL STORAGE NODE
+        # message = {
+        #         "fName": fileList[i],
+        #         "FID" : FileToRaid["FID"],
+        #         "cwd" : FileToRaid["filePath"],
+        #         "command":"upload"
+        #     }
+        #
+        #t1 = SFTPThread(message, storageNodeUploadList[i])
+        
+        
         
         # block for a momet
         # display a message
@@ -254,8 +430,19 @@ def file_RAID_view(request,id):
         form = RAIDForm(request.POST)
         RAIDtype = request.POST["RAIDtype"]
         obj = Files.objects.get(id=id)
+        
+        storageNode = {        
+            "SID":1,
+            "AllocSize":1000,
+            "MaxSize": 1000,
+            "IP":"192.168.0.225",
+            "PORT":5001,
+        }
+        
+        storageNodeList = []
+        
         if form.is_valid():
-            t1 = raidThread(obj,RAIDtype)
+            t1 = raidThread(obj,RAIDtype,storageNodeList)
             t1.start()
             #VARIABLE#
             #INSERT FUNCTION YOUR Function
