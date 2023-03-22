@@ -19,15 +19,19 @@ def getCurrTime():
     return current_time
 
 
-def Registration(config):
-    date = getCurrTime()
-    config.update({"time":date})
+def Registration(client,config):
     try:
-        # client.sendall(json.dumps(config).encode())
-        # data = client.recv(1024)
-        
+        Register ={
+                "SID": 1, 
+                "allocSize": config["allocSize"], 
+                "storageIp": config["StorageIP"], 
+                "port":config["port"],
+                "command": "Register"
+            }
+        client.sendall(json.dumps(Register).encode())
+        data = client.recv(1024)
+        #TODO: {StorageIP,storageport,allocsize,SID}
         with open(os.path.join(os.getcwd(),"test-Config-client.json"), 'w', encoding='utf-8-sig') as f:
-            print(config)
             config["Registered"] = True
             del config["command"]
             json.dump(config,f)
@@ -57,25 +61,26 @@ def Heartbeat(client,config):
             mainrep = client.recv(1024)
             print(f'Server:{mainrep.decode()}')
             if mainrep.decode(): 
-                time.sleep(5)
+                time.sleep(2)
         except:
             ctr +=1
             try: 
-                client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                # client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                print(f'client Socket = {client.connect((config["StorageIP"],config["Serverport"]))}')
+                # print(f'Test{client.connect(config["StorageIP"],config["Serverport"])}')
                 # client.bind(config["StorageIP"],config['storageport'])
-                client.connect((config["IP"],config["serverport"]))
                 client.sendall(json.dumps(HB).encode())
                 
                 
                 
             except: 
-                pass
+                print('did not enter this zone')
             print("no Response from Server")
             if ctr == 5: 
                 client.close()
                 print("server no response, shutting down")
                 exit()
-        time.sleep(5)
+        time.sleep(2)
 
 
     
@@ -88,12 +93,13 @@ def main():
     HB =False
     with open("./test-Config-Client.json", 'r', encoding='utf-8-sig') as f:
             config = json.loads(f.read())  
-    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as client: 
+    client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)  
+    print(f"{client}")
         # client.bind((config["StorageIP"],config["Storageport"]))
-        client.connect((config["StorageIP"],config["Serverport"]))
+    client.connect((config["StorageIP"],config["Serverport"]))
         
         
-        Heartbeat(client,config)
+    Heartbeat(client,config)
     
 if __name__ == '__main__':
     main()

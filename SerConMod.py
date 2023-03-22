@@ -2,6 +2,7 @@ import threading
 import time 
 import json
 import socket
+import sqlite3
 from datetime import datetime
 
 
@@ -11,24 +12,42 @@ def getCurrTime():
     return current_time
         
 
+def storageRegister(SID,allocSize,storageIp,port): 
+    conn = sqlite3.connect("db.sqlite3")
+    c = conn.cursor()
+    c.execute("INSERT INTO CVSMS_storageNodeInfo VALUES (?,?,?,?,?)",(None,SID,allocSize,storageIp,port))
+    conn.commit()
+    print(f'{SID} - {storageIp} inserted at table')
+    conn.close()
+    
+def storageHeartbeat(Ip,port,status,time): 
+    conn = sqlite3.connect("db.sqlite3")
+    c = conn.cursor()
+    c.execute("INSERT INTO CVSMS_storageNodeStatus VALUES (?,?,?,?,?)",(None,Ip,port,status,time))
+    conn.commit()
+    print(f'{Ip} active @ {time} ')
+    conn.close()
+    pass
+    
+
 def StorageConnection(conn,addr):
     while True:
         msg = "success"
         data = conn.recv(1024)
         dataFromClient = json.loads(data.decode())
         if dataFromClient["command"] == "Register": 
-            #----------------- INSERT DB CALL REGISTER-------###### 
-            print(f"Comming from: {addr} @ {getCurrTime()} \n ")
-            print(f'User Connected: {dataFromClient["SID"]}')
+            #----------------- INSERT DB CALL REGISTER-------######
+            storageRegister(dataFromClient["SID"],dataFromClient["allocSize"],dataFromClient["storageIp"],dataFromClient["storagePort"]) 
+            print(f'User Connected: {dataFromClient}')
             conn.sendall(msg.encode())
             # db(IP,POrt,SID,ALLOC,Registered)
             print(f"Sent ACK to {addr} ")
             conn.close()    
         
         elif dataFromClient["command"] == "Heartbeat":
-                print(f'message:{dataFromClient["message"]} @{getCurrTime()}')
-                conn.sendall(msg.encode())
-                print(f'SENT ACK to {addr}   \n')
+            storageHeartbeat(dataFromClient["IP"],dataFromClient["port"],dataFromClient["status"],getCurrTime())
+            conn.sendall(msg.encode())
+            print(f'SENT ACK to {addr}   \n')
                 
 
 

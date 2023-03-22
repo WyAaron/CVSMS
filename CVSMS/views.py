@@ -1,8 +1,9 @@
+import django
 from django.shortcuts import render, redirect
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import UserCreationForm
-from CVSMS.models import  Files
+from CVSMS.models import  Files,storageNodeInfo
 from .forms import FileForm,RAIDForm
 from django.shortcuts import get_object_or_404
 import sSFTP
@@ -15,14 +16,18 @@ import threading
 import shutil
 import sqlite3
 
-# Create your views here.
 
-
-
-
+# Cr = "eate your views here.
+def write_in_DB(req,args):
+    # obj = storageNodeInfo()
+    print("f{args}")
+    
+    
+    
 # Home view of user
 @login_required
 def home_view(request): 
+    
     user = request.user 
     if user.is_superuser: 
         context = {
@@ -450,12 +455,28 @@ def file_Delete_view(request, id):
         return home_view(request)
         # return redirect(success_url
     context = {
-         "file":file
-     }
+        "file":file
+    }
     return render(request,'file-delete.html',context)
 
+#TODO: 
+def file_LocalStorage_view(request): 
+    ## storage_list 
+    ## Storage_node 
+    ##needs 
+    pass
 
-    
+#TODO
+def file_UNRAID_view(request,id):
+    obj = Files.objects.get(id=id)
+    print(f'UNRAIDED! {obj}')
+    ## Files to get all of the files 
+    ##
+    context ={
+        "file":obj
+    }
+    return render(request,'file-UNRAID.html',context)
+    pass 
 
 ############################## Account Portion #############################
 def login_view(request): 
