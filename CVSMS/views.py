@@ -201,13 +201,12 @@ def file_Retreive_view(request,id):
 
 
 class raidThread(threading.Thread):
-    def __init__(self,obj,RAIDtype, storageNodeList):
+    def __init__(self,obj,RAIDtype):
         # execute the base constructor
         threading.Thread.__init__(self)
         # store the value
         self.obj = obj
         self.RAIDtype = RAIDtype
-        self.storageNodeList = storageNodeList
     # override the run function
     def run(self):
         # TODO: Change to SFTP function
@@ -418,10 +417,9 @@ def file_RAID_view(request,id):
             "PORT":5001,
         }
         
-        storageNodeList = []
         
         if form.is_valid():
-            t1 = raidThread(obj,RAIDtype,storageNodeList)
+            t1 = raidThread(obj,RAIDtype)
             t1.start()
             #VARIABLE#
             #INSERT FUNCTION YOUR Function
