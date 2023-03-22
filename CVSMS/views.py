@@ -13,6 +13,7 @@ from django.contrib import messages
 import time 
 import threading
 import shutil
+import sqlite3
 
 # Create your views here.
 
@@ -137,25 +138,6 @@ def file_Upload_view(request):
         form = FileForm()
     return render(request,'file-Upload.html',context=context)
 
-#### File download request 
-@login_required
-def file_Download_view(request): 
-    
-    
-        # sSFTP.download(message,storageNode)
-        
-        
-    # file_server = pathlib.Path()
-    # if request.method == "GET": 
-    #     file_download = get_object_or_404(Files, pk = id )
-    #     response = HttpResponse(file_download.file, content_type='application/pdf')
-    #     response['Content-Disposition'] =f'attactments; filename="{file_download.fileName}"' 
-    #     return response 
-    return render(request,'file-Download.html', {})    
-
-
-
-
 
 
 
@@ -215,9 +197,6 @@ def file_Retreive_view(request,id):
                 return response
         else: # file is downloading from storage node
             messages.info(request,f'file is downloading')
-
-    
-
     return redirect('/')
 
 
