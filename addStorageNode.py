@@ -107,12 +107,38 @@ import serverDButil
 
 # entry = 147
 
+# db = "SERVER.sqlite3"
+# # print(serverDButil.getStorageNode(["Storage-1"]))
+# def getStorageNode(SID):
+# 	conn = sqlite3.connect(db)
+# 	c = conn.cursor()
+# 	c.execute("SELECT * FROM CVSMS_storagenodeinfo WHERE SID = (?)", SID)
+# 	items = c.fetchall()
+ 
+# 	columnName = [description[0] for description in c.description]
 
-# print(serverDButil.getStorageNode(["Storage-1"]))
-import json
-message = {
-                "start": 1,
-                "maxSize": 2
-            }
-print(f"out: {message}")
-message = json.dumps(message).encode('utf-8')
+# 	keyValue = []
+
+# 	for item in items:
+# 		data = {}
+
+# 		for i in range(len(columnName)):
+# 			data[columnName[i]] = item[i]
+# 		keyValue.append(data)
+  
+# 	conn.commit()
+# 	conn.close()
+	
+# 	print(f"key {keyValue}")
+ 
+# 	return keyValue[0]
+
+# getStorageNode(["Storage-2"])
+
+import math
+
+val = 52428799  
+
+MB = 2 ** 20
+print( math.ceil(val/25*MB%2) )
+
