@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+
+
+{% block content %}
+<h1>Put your files to Server Local Storage </h1>
+<h4>File Name: {{file.fileName}}</h4>
+<h4>Size {{file.actualSize | filesizeformat}}</h4>
+<p></p>
+
+<form  method="POST" enctype="multipart/form-data">
+
+    {% csrf_token %}
+
+    <button type="submit" >Put to Server Local Storage</button>
+</form>
+
+{% endblock content %}

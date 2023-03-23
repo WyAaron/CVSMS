@@ -2,10 +2,7 @@
 """Django's command-line utility for administrative tasks."""
 import os
 import sys
-import multiprocessing
-import socket
-import time
-import json
+import multiprocessing,threading
 import SerConMod
 
 
@@ -25,30 +22,16 @@ def main():
         ) from exc
     execute_from_command_line(sys.argv)
 
-def runserver():
-    IP = "192.168.1.9"
-    PORT = 5555 
-    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as server: 
-        server.bind((IP,PORT))
-        server.listen()
-        print(f'server Listening on {PORT}')
-        conn, addr = server.accept()
-        with conn:
-            print(f'Connected by {addr}')
-            while True: 
-                data = conn.recv(1024)
-                print(f'{data}')
-                if not data:
-                    break 
-                conn.sendall(data)
+
 
 
 
 
 if __name__ == '__main__':
+    
     # main()
-    t2 = multiprocessing.Process(target=SerConMod.main)
     t1 = multiprocessing.Process(target=main)
+    t2 = multiprocessing.Process(target=SerConMod.main)
     t1.start()
     t2.start()
     t1.join()

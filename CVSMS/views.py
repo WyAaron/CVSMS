@@ -26,7 +26,7 @@ def get_storageSize():
 
 
 def get_fileTotalSize(): 
-    files = Files.objects.all()
+    files = Files.objects.filter(RAIDtype="NONE")
     totalFileSize = sum(files.values_list('actualSize',flat=True))    
     return totalFileSize
     
@@ -63,7 +63,7 @@ def home_view(request):
 #         }
 
     # return render(request, 'detail.html', context=context)
-
+#TODO: next Version 
 @login_required
 def fileSearch_view(request):
     query_dict =  request.GET 
@@ -476,16 +476,39 @@ def file_Delete_view(request, id):
     context = {
         "file":file
     }
-    return render(request,'file-delete.html',context)
+    return render(request,'file-Delete.html',context)
 
 #TODO: 
-def file_ToLocalStorage_view(request): 
+def file_toLocalStorage_view(request,id): 
+    obj = Files.objects.get(id = id)
+    context = {
+        "file": obj
+    }
+    if request.method == "POST": 
+        #-- INSERT COMMANDS HERE --# 
+        print(obj.file)
+        return redirect('/')
+    
+    return render(request, 'file-toLocalStorage.html',context)
+    
+
     ## storage_list 
     ## Storage_node 
     ##needs 
     pass
-def file_BackToStoragenodes_view(reqeust): 
-    pass
+def file_backToStorageNodes_view(request,id): 
+    obj = Files.objects.get(id = id)
+    
+    context = {
+        "file": obj
+    }
+    if request.method == "POST": 
+        #-- INSERT COMMANDS HERE --# 
+        print(obj.file)
+        return redirect('/')
+    
+    return render(request, 'file-backToStorageNodes.html',context)
+    
 
 #TODO
 def file_UNRAID_view(request,id):

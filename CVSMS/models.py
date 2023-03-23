@@ -14,10 +14,9 @@ class Files(models.Model):
         
     ]
     #0,1,P default = none 
-
     owner = models.CharField(User, null=True,blank=True,max_length=300)
     FID = models.IntegerField(null=True)
-    SID = models.CharField(null=True,choices=RAID_TYPE_CHOICES,default="NONE",max_length=256)
+    SID = models.CharField(null=True,max_length=256)
     fileName = models.CharField(null=True, max_length=256)
     file = models.FileField(null=True,upload_to=file_path)    
     actualSize = models.IntegerField(null=True)
