@@ -24,7 +24,7 @@ def updateMaxSize(storageNode):
     conn = sqlite3.connect('db.sqlite3')
     c = conn.cursor()
     c.execute("UPDATE CVSMS_storagenodeinfo SET maxSize = ? WHERE SID = ?",(storageNode["maxSize"], storageNode["SID"]))
-    print(f'{SID} - offline')
+    print(f'{storageNode["SID"]} - offline')
     conn.commit()
     conn.close()
 

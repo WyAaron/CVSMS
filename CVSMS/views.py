@@ -519,7 +519,7 @@ def file_toLocalStorage_view(request,id):
     obj = Files.objects.get(id = id)
     
     
-    
+
     context = {
         "file": obj
     }
@@ -560,6 +560,16 @@ def file_UNRAID_view(request,id):
     }
     return render(request,'file-UNRAID.html',context)
     pass 
+
+
+def get_status_of_Nodes(request): 
+    obj = storageNodeInfo.objects.all()
+    context = {
+        "statusInfo_list":obj
+    }
+    
+    return render(request,'get-statusOfNodes.html',context)
+
 
 ############################## Account Portion #############################
 def login_view(request): 
