@@ -98,13 +98,13 @@ def home_view(request):
     
     if user.is_superuser: 
         context = {
-        "file_list": Files.objects.filter(RAIDtype = "NONE"),
+        "file_list": Files.objects.filter(RAIDid = -1 ),
         'storageSize': get_storageSize(),
         'totalFileSize': get_fileTotalSize()
     }
     else:
         context = {
-            "file_list": Files.objects.filter(owner=request.user,RAIDtype = "NONE"),
+            "file_list": Files.objects.filter(owner=request.user,RAIDid = -1),
         }
     
         
