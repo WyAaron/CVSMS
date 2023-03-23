@@ -2,27 +2,23 @@ import sqlite3
 import json
 
 ########## Add 1 entry ##########
-def addMD(file):
+def addMD(item):
 	conn = sqlite3.connect('db.sqlite3')
 	c = conn.cursor()
 
 	c.execute("SELECT id FROM CVSMS_files ORDER BY id DESC LIMIT 1")
 	result = int(c.fetchone()[0]) + 1
 	print(result)
-
-	with open('data.json', 'r') as f:
-		data = json.load(f)
-
-	for item in data:
-		FID = item['FID']
-		fileName = item['fileName']
-		owner = item['owner']
-		RAIDid = item['RAIDid']
-		RAIDtype = item['RAIDtype']
-		SID = item['SID']
-		actualSize = item['actualSize']
-		start = item['start']
-		file = item['file']
+	
+	FID = item['FID']
+	fileName = item['fileName']
+	owner = item['owner']
+	RAIDid = item['RAIDid']
+	RAIDtype = item['RAIDtype']
+	SID = item['SID']
+	actualSize = item['actualSize']
+	start = item['start']
+	file = item['file']
 
 	c.execute("INSERT INTO CVSMS_files VALUES (?,?,?,?,?,?,?,?,?,?)", (result,FID, fileName, owner, RAIDid, RAIDtype, SID, actualSize, start, file))
 	print("\nEntry added successfully\n")
