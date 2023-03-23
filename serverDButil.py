@@ -3,7 +3,7 @@ import sqlite3
 ########## Add 1 entry ##########
 def addMD(item):
 	conn = sqlite3.connect('db.sqlite3')
-	c = conn.cursor()
+	c = conn.cur ()
 
 	c.execute("SELECT id FROM CVSMS_files ORDER BY id DESC LIMIT 1")
 	result = int(c.fetchone()[0]) + 1
@@ -48,7 +48,7 @@ def searchMD(id):
 
 
 ########## Edit entry - per FID ##########
-def editMD(id, RAIDtype):
+def editMDraid(id, RAIDtype):
 	conn = sqlite3.connect('db.sqlite3')
 	c = conn.cursor()
 
@@ -57,6 +57,21 @@ def editMD(id, RAIDtype):
 
 	conn.commit()
 	conn.close()
+
+
+def updateMaxSize(maxSize, SID):
+    conn = sqlite3.connect('db.sqlite3')
+    c = conn.cursor()
+    c.execute("UPDATE CVSMS_storagenodeinfo SET maxSize = ? WHERE SID = ?",(maxSize, SID))
+    conn.commit()
+    conn.close()
+
+def updateFileStartMD(start, FID):
+    conn = sqlite3.connect('db.sqlite3')
+    c = conn.cursor()
+    c.execute("UPDATE CVSMS_files SET start = ? WHERE FID = ?",(start, FID))
+    conn.commit()
+    conn.close()
 
 
 ########## Delete entry - per FID ##########
@@ -90,3 +105,4 @@ def getStorageNodesFromDB():
 	
 	conn.close()
 	return keyValue
+
