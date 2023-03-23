@@ -517,7 +517,9 @@ def file_Delete_view(request, id):
 #TODO: 
 def file_toLocalStorage_view(request,id): 
     obj = Files.objects.get(id = id)
-    #Testing
+    
+    
+    
     context = {
         "file": obj
     }
