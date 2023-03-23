@@ -217,7 +217,7 @@ def file_Retreive_view(request,id):
 
 def findStorNode(storNodeList, fileSize):
     storNodeForFile = None
-    storNodeList = sorted(storNodeList, key=lambda x: x['MaxSize'], reverse=True)
+    storNodeList = sorted(storNodeList, key=lambda x: x['maxSize'], reverse=True)
     # storNodeList = sorted(storNodeList, reverse=True)
     for i in range(len(storNodeList)):
         #print(f"{storNodeList[i]} < {fileSize} = {storNodeList[i] < fileSize}")
@@ -321,7 +321,7 @@ class raidThread(threading.Thread):
 
             fileStoragePair = getStorageNodes(fileList, storageNodeList, FileToRaid["filePath"])
             
-            
+            print("hello")
             for i in fileStoragePair:
                 message = {
                     "fName": i["fileMD"]["fName"],
@@ -332,6 +332,7 @@ class raidThread(threading.Thread):
                 try:
                     
                     for i in fileStoragePair:
+                        
                         print(i)
                     # Files.objects.create(
                     #     owner=self.obj.owner, 
@@ -340,7 +341,7 @@ class raidThread(threading.Thread):
                     #     fileName = self.obj.fileName, 
                     #     file = self.obj.file, 
                     #     actualSize = i["fileMD"]["fSize"],
-                    #     RAIDtype = self.RAIDtype
+                    #     RAIDtype = self.RAIDtype      
                     #     )
                     
                     # t1 = SFTPThread(message, i["storageNode"])
