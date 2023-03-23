@@ -8,7 +8,7 @@ from .models import *
 # class CVSMSAdmin(admin.ModelAdmin): 
 #     list_display = ['FID', 'fileName']
 class FileAdmin(admin.ModelAdmin): 
-    list_display = ['id','fileName','file']
+    list_display = ['owner','id','fileName','file','RAIDtype','SID']
 
 # admin.site.register(fileMetadata,CVSMSAdmin)
 admin.site.register(Files,FileAdmin)

@@ -5,6 +5,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import UserCreationForm
 from CVSMS.models import  Files,storageNodeInfo
 from .forms import FileForm,RAIDForm
+from django.contrib.auth.models import User
 from django.shortcuts import get_object_or_404
 import sSFTP
 import RAIDmod
@@ -16,8 +17,7 @@ import time
 import threading
 import shutil
 import sqlite3
-from django.db.models import Sum
-
+from django.db.models import Q
 # Cr = "eate your views here.
 def get_storageSize():
     obj = storageNodeInfo.objects.all()
@@ -92,13 +92,10 @@ def getStorageNodes(fileList, storageNodeList, path):
 # Home view of user
 @login_required
 def home_view(request): 
-    
     user = request.user 
-    
-    
     if user.is_superuser: 
         context = {
-        "file_list": Files.objects.filter(RAIDid = -1 ),
+        "file_list": Files.objects.filter(RAIDid = -1) , 
         'storageSize': get_storageSize(),
         'totalFileSize': get_fileTotalSize()
     }
@@ -463,7 +460,6 @@ def file_RAID_view(request,id):
         form = RAIDForm(request.POST)
         RAIDtype = request.POST["RAIDtype"]
         obj = Files.objects.get(id=id)
-        
         storageNode = {        
             "SID":1,
             "AllocSize":1000,
@@ -476,6 +472,8 @@ def file_RAID_view(request,id):
         if form.is_valid():
             t1 = raidThread(obj,RAIDtype)
             t1.start()
+
+
             return redirect('/')
         else: 
             form = RAIDForm()
@@ -490,11 +488,11 @@ def file_Delete_view(request, id):
         
         
         message = {
-            "fName": fName,
+            # "fName": fName,
             "FID" : file.FID,
         } 
         t1 = SFTPThread(message, )   
-        delete.start()    
+        # delete.start()    
         
         return home_view(request)
         # return redirect(success_url
@@ -583,3 +581,30 @@ def register_view(request):
     
     return render(request,"accounts/register.html",{"form":form})
 
+
+@login_required
+def user_view(request): 
+    users = User.objects.all()
+    print(users)
+    
+    context = {
+        "user_list": users
+    }
+    
+    return render(request,'accounts/user.html',context)
+
+@login_required
+def deleteUser_view(request, username): 
+    try:
+        u = User.objects.get(username = username)
+        u.delete()
+        messages.success(request, "The user is deleted")            
+
+    except User.DoesNotExist:
+        messages.error(request, "User doesnot exist")    
+        return home_view(request)
+
+    except Exception as e: 
+        return home_view(request)
+
+    return home_view(request)

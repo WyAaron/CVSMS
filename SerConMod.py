@@ -74,7 +74,6 @@ def StorageConnection(conn,addr):
             print(repr(e))
             break
 def main(): 
-    ctr = 1
     IP= "192.168.1.9"
     PORT= 7777
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as server: 

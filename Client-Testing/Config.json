@@ -1,1 +1,9 @@
-﻿{"storageIP": "localhost", "storagePort": 7755, "serverIP": "192.168.1.9", "serverPort": 7777, "SID": "Test-PC1", "AllocSize": 10000000000, "Registered": true, "username": "ssh", "password": "password"}
+﻿{"storageIP": "localhost", 
+"storagePort": 7755, 
+"serverIP": "192.168.1.9", 
+"serverPort": 7777, 
+"SID": "Test-PC1",
+"AllocSize": 10000000000, 
+"Registered": true, 
+"username": "ssh",
+"password": "password"}

@@ -27,7 +27,7 @@
             <th scope="col">Downlad</th>
             <th scope="col">Delete </th>
             <th scope="col" >RAID TYPE</th>
-            <th scope="col" >Local Status</th>
+            <th scope="col" >Storage </th>
 
 
         </tr>
@@ -51,8 +51,7 @@
         
         {% if file.SID ==  "LOCAL"    %}
         <td><a href="{% url 'file-backToStorageNodes' file.id %}">{{file.SID}}</a></td>
-        {% elif file.RAIDtype != "NONE" %}
-        <td><a href=""> N \ A </a></td>
+       
         {% else %}
         <td><a href="{% url 'file-toLocalStorage' file.id %}"> {{file.SID}}</a></td>
         {% endif %}

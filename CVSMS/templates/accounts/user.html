@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+
+{% block content %}
+{% csrf_token %}
+
+
+<h1>Users</h1>   
+<table class="table">
+    
+    <thead>    
+        <tr>
+            <th scope="col" >Name</th>
+            <th scope="col">Status</th>
+            <th scope="col" >Last Login</th>
+            <th scope="col" >Date Joined</th>
+            <th scope="col">Delete</th>
+        </tr>
+    </thead>
+    <tbody>
+    {% for user in user_list %}
+    <tr>
+        
+        <th scope="row">{{user.username}}</th>
+        <td>{{user.is_staff}}</td>
+        <td>{{user.last_login}}</td>
+        <td>{{user.date_joined}}</td>
+        {% if user.is_superuser %}
+        
+        {% else %}
+        <td><a href="{% url 'delete' user.username %}"><i class="bi bi-trash3"></i></a></td>
+        {% endif %}
+
+    </tr>
+    </tbody>
+    {% empty %}
+    <h3>No Registered Nodes</h3>
+    
+    {% endfor %} 
+</table>
+
+{% endblock content %}
