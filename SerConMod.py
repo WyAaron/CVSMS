@@ -12,49 +12,58 @@ def getCurrTime():
     return current_time
         
 
-def storageRegister(allocSize,storageIp ,port,maxSize,SID): 
+def storageRegister(data): 
     conn = sqlite3.connect("db.sqlite3")
     c = conn.cursor()
-    c.execute("INSERT INTO CVSMS_storageNodeInfo VALUES (?,?,?,?,?,?)",(None,allocSize,storageIp ,port,maxSize,SID))
+    c.execute("INSERT INTO CVSMS_storageNodeInfo VALUES (?,?,?,?,?,?,?)",(None,data["SID"],data["allocSize"],data["storageIp"],data["storagePort"],data["allocSize"],True))
     conn.commit()
-    print(f'{SID} - {storageIp} inserted at table')
+    print(f'{data["SID"]} - {data["storageIp"]} inserted at table')
     conn.close()
     
-def storageHeartbeat(Ip,port,status,time): 
+def storageHeartbeat(data): 
     conn = sqlite3.connect("db.sqlite3")
     c = conn.cursor()
-    c.execute("INSERT INTO CVSMS_storageNodeStatus VALUES (?,?,?,?,?)",(None,Ip,port,status,time))
+    c.execute("INSERT INTO CVSMS_storageNodeStatus VALUES (?,?,?,?,?)",(None,data["SID"],data["port"],data["status"],getCurrTime()))
     conn.commit()
-    print(f'{Ip} active @ {time} ')
+    print(f'{data["SID"]} active @ {getCurrTime()} ')
     conn.close()
-    pass
     
+
+def storageStatus(SID,status): 
+    conn = sqlite3.connect('db.sqlite3')
+    c = conn.cursor()
+    c.execute("UPDATE CVSMS_storagenodeinfo SET status = ? WHERE SID = ?",(status,SID))
+    print(f'{SID} - offline')
+    conn.commit()
+    conn.close()
 
 def StorageConnection(conn,addr):
+    
     while True:
-        msg = "success"
-        data = conn.recv(1024)
-        dataFromClient = json.loads(data.decode())
-        if dataFromClient["command"] == "Register": 
-            #----------------- INSERT DB CALL REGISTER-------######
-            storageRegister(dataFromClient["allocSize"],dataFromClient["storageIp"],dataFromClient["storagePort"],dataFromClient["allocSize"],dataFromClient["SID"]) 
-            print(f'User Connected: {dataFromClient}')
-            conn.sendall(msg.encode())
-            # db(IP,POrt,SID,ALLOC,Registered)
-            print(f"Sent ACK to {addr} ")
-            conn.close()    
-        
-        elif dataFromClient["command"] == "Heartbeat":
-            storageHeartbeat(dataFromClient["IP"],dataFromClient["port"],dataFromClient["status"],getCurrTime())
-            conn.sendall(msg.encode())
-            print(f' ACK {dataFromClient["SID"] } {addr}   \n')
-                
-
-
-        else: 
-        #---- Reconnection ----------- #
-            print(f'{dataFromClient["SID"]} has reconnected')
-
+        try:
+            msg = "success"
+            data = conn.recv(1024)
+            dataFromClient = json.loads(data.decode())
+            if dataFromClient["command"] == "Register": 
+                #----------------- INSERT DB CALL REGISTER-------######
+                storageRegister(dataFromClient) 
+                print(f'User Connected: {dataFromClient}')
+                conn.sendall(msg.encode())
+                # db(IP,POrt,SID,ALLOC,Registered)
+                print(f"Sent ACK to {addr} ")
+                conn.close()    
+            
+            elif dataFromClient["command"] == "Heartbeat":
+                storageHeartbeat(dataFromClient)
+                storageStatus(dataFromClient["SID"],True)
+                conn.sendall(msg.encode())
+                print(f' ACK {dataFromClient["SID"] } {addr}   \n')
+            #---- Reconnection ----------- 
+        except Exception as e:
+            print(f'data from SID- {dataFromClient["SID"]}')
+            storageStatus(dataFromClient["SID"],False) 
+            print(repr(e))
+            break
 def main(): 
     ctr = 1
     IP= "192.168.1.9"

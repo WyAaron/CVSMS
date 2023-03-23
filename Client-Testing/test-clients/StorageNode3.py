@@ -44,10 +44,9 @@ def Heartbeat(client,config):
     ctr=0 
     Heart = {
         "command": "Heartbeat",
-        "IP": "localhost", 
-        "port": 7778, 
-        "status": "connected",
-        "SID": config["SID"]
+        "SID": config["SID"],
+        "port": config["storagePort"], 
+        "status": True
     }
     while True:  
         try:

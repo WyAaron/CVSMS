@@ -27,7 +27,7 @@ class Files(models.Model):
     
 
 class storageNodeStatus(models.Model): 
-    IP = models.GenericIPAddressField()
+    SID = models.CharField(null=True, max_length=50)
     port = models.IntegerField()
     status = models.BooleanField(default=False)
     time = models.TimeField()
@@ -38,6 +38,7 @@ class storageNodeInfo(models.Model):
     IP = models.GenericIPAddressField()
     port = models.IntegerField()
     maxSize = models.IntegerField(null=True)
+    status = models.BooleanField(default=False)
 
 
 

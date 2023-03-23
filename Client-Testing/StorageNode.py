@@ -44,11 +44,11 @@ def Heartbeat(client,config):
     ctr=0 
     Heart = {
         "command": "Heartbeat",
-        "IP": "localhost", 
-        "port": 7778, 
-        "status": "connected",
-        "SID": config["SID"]
+        "SID": config["SID"],
+        "port": config["storagePort"], 
+        "status": True
     }
+    
     while True:  
         try:
             client.sendall(json.dumps(Heart).encode())
@@ -74,12 +74,11 @@ def Heartbeat(client,config):
 
 
 def main():
-    IP = "localhost"
-    PORT = 7777
     bufferSize = 1024 
     with open(os.path.join(os.getcwd(),"Config.json"), 'r', encoding='utf-8-sig') as f:
             config = json.loads(f.read())  
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as client: 
+        # client.bind((config["storageIP"],config["storagePort"]))
         client.connect((config["serverIP"],config["serverPort"]))
         print(f'Registration status: {config["Registered"]}')
         try:
