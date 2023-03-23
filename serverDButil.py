@@ -1,5 +1,4 @@
 import sqlite3
-import json
 
 ########## Add 1 entry ##########
 def addMD(item):
@@ -69,3 +68,25 @@ def delMD(id):
 
 	conn.commit()
 	conn.close()
+ 
+ 
+def getStorageNodesFromDB():
+	conn = sqlite3.connect('db.sqlite3')
+	c = conn.cursor()
+
+	c.execute("SELECT * FROM CVSMS_storageNodeInfo")
+	items = c.fetchall()
+
+	columnName = [description[0] for description in c.description]
+
+	keyValue = []
+
+	for item in items:
+		data = {}
+
+		for i in range(len(columnName)):
+			data[columnName[i]] = item[i]
+		keyValue.append(data)
+	
+	conn.close()
+	return keyValue

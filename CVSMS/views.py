@@ -215,6 +215,50 @@ def file_Retreive_view(request,id):
     return redirect('/')
 
 
+def findStorNode(storNodeList, fileSize):
+    storNodeForFile = None
+    storNodeList = sorted(storNodeList, key=lambda x: x['maxSize'], reverse=True)
+    # storNodeList = sorted(storNodeList, reverse=True)
+    for i in range(len(storNodeList)):
+        #print(f"{storNodeList[i]} < {fileSize} = {storNodeList[i] < fileSize}")
+        if storNodeList[i]["maxSize"] >= fileSize:
+            storNodeForFile = storNodeList[i]
+        elif storNodeList[i]["maxSize"] < fileSize:
+            break
+    if storNodeForFile == None:
+        return storNodeList, storNodeForFile
+    else:
+        storNodeList.pop(i-1)
+        return storNodeList, storNodeForFile
+
+
+def getAvailableStorNode(storNodeList, fileList):
+    storList = []
+    fileList = sorted(fileList, key=lambda x: x['fSize'], reverse=True)
+    if len(storNodeList) >= len(fileList):
+        for i in fileList:
+            tempList, storNode = findStorNode(storNodeList,i['fSize'])
+            if storNode:
+                storList.append({"fileMD" : i, "storageNode" : storNode})
+                storNodeList = tempList
+    return storList
+
+def getStorageNodes(fileList, storageNodeList, path):
+    #GET THE FILE SIZE FOR EACH PART
+        tempFileList = []
+        for i in range(len(fileList)):
+            fileSize = os.path.getsize(os.path.join(path, fileList[i]))
+            
+            tempFileMD = {
+                "fName": fileList[i],
+                "fSize": fileSize
+            }
+            
+            tempFileList.append(tempFileMD)
+        #SORT THE FILES IN ASCENDING ORDER BASED ON THEIR SIZE 
+        return getAvailableStorNode(storageNodeList, tempFileList)
+    
+    
 class raidThread(threading.Thread):
     def __init__(self,obj,RAIDtype):
         # execute the base constructor
@@ -238,6 +282,8 @@ class raidThread(threading.Thread):
         
         #CREATE FUNCTION TO FIND STORAGE NODE LOCATION OF FILE TO BE RAIDED
         #storageNode = findStorage(self.storageNodeList, FID)
+        
+        
         storageNode = {        
                     "SID":1,
                     "AllocSize":1000,
@@ -268,47 +314,37 @@ class raidThread(threading.Thread):
             fileList = raid.split(FileToRaid["fName"],2,FileToRaid["filePath"])
             
             
-            storageNodeUploadList = [
-                {        
-                    "SID":1,
-                    "AllocSize":1000,
-                    "MaxSize": 1000,
-                    "IP":"192.168.0.225",
-                    "PORT":5002,
-                },
-                {        
-                    "SID":1,
-                    "AllocSize":1000,
-                    "MaxSize": 1000,
-                    "IP":"192.168.0.225",
-                    "PORT":5003,
-                }
-            ]
+            storageNodeList = serverDButil.getStorageNodesFromDB()
+            
             threads = []
             #SEND THE SPLIT FILES TO THE STORAGE NODES
-            for i in range(len(fileList)):
-                
+
+            fileStoragePair = getStorageNodes(fileList, storageNodeList, FileToRaid["filePath"])
+            
+            print("hello")
+            for i in fileStoragePair:
                 message = {
-                    "fName": fileList[i],
+                    "fName": i["fileMD"]["fName"],
                     "FID" : FileToRaid["FID"],
                     "cwd" : FileToRaid["filePath"],
                     "command":"upload"
                 }
                 try:
                     
-                    fileSize = os.path.getsize(os.path.join(FileToRaid["filePath"], fileList[i]))
-                    print(fileSize)
-                    Files.objects.create(
-                        owner=self.obj.owner, 
-                        FID = self.obj.FID,
-                        SID = storageNodeUploadList[i]["SID"], 
-                        fileName = self.obj.fileName, 
-                        file = self.obj.file, 
-                        actualSize = fileSize,
-                        RAIDtype = self.RAIDtype
-                        )
+                    for i in fileStoragePair:
+                        
+                        print(i)
+                    # Files.objects.create(
+                    #     owner=self.obj.owner, 
+                    #     FID = self.obj.FID,
+                    #     SID = storageNodeUploadList[i]["SID"], 
+                    #     fileName = self.obj.fileName, 
+                    #     file = self.obj.file, 
+                    #     actualSize = i["fileMD"]["fSize"],
+                    #     RAIDtype = self.RAIDtype      
+                    #     )
                     
-                    # t1 = SFTPThread(message, storageNodeUploadList[i])
+                    # t1 = SFTPThread(message, i["storageNode"])
                     # threads.append(t1)
                     # t1.start()
                     
