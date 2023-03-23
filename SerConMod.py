@@ -10,7 +10,7 @@ def getCurrTime():
     now = datetime.now()
     current_time = now.strftime("%H:%M:%S")  # getting the current time
     return current_time
-        
+
 
 def storageRegister(data): 
     conn = sqlite3.connect("db.sqlite3")
@@ -19,7 +19,16 @@ def storageRegister(data):
     conn.commit()
     print(f'{data["SID"]} - {data["storageIp"]} inserted at table')
     conn.close()
-    
+
+def updateMaxSize(storageNode):
+    conn = sqlite3.connect('db.sqlite3')
+    c = conn.cursor()
+    c.execute("UPDATE CVSMS_storagenodeinfo SET maxSize = ? WHERE SID = ?",(storageNode["maxSize"], storageNode["SID"]))
+    print(f'{SID} - offline')
+    conn.commit()
+    conn.close()
+
+
 def storageHeartbeat(data): 
     conn = sqlite3.connect("db.sqlite3")
     c = conn.cursor()
