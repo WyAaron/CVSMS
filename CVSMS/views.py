@@ -31,11 +31,11 @@ def home_view(request):
     user = request.user 
     if user.is_superuser: 
         context = {
-        "file_list": Files.objects.all(),
+        "file_list": Files.objects.filter(RAIDtype = "NONE"),
     }
     else:
         context = {
-            "file_list": Files.objects.filter(owner=request.user),
+            "file_list": Files.objects.filter(owner=request.user,RAIDtype = "NONE"),
         }
     return  render(request,'home-view.html',context=context) 
 
@@ -49,7 +49,7 @@ def home_view(request):
 #         context = {
 #             "object": file_obj, 
 #         }
-    
+
     # return render(request, 'detail.html', context=context)
 
 @login_required
@@ -88,8 +88,6 @@ class SFTPThread(threading.Thread):
             sSFTP.delete(self.message, self.storageNode)
         # block for a moment
         # display a message
-        
-        
         
 #### Uploading of file
 @login_required
@@ -253,8 +251,6 @@ class raidThread(threading.Thread):
             print("Did not download")
         # #PERFORM RAID
         
-        
-        
         if self.RAIDtype == "0":
             raid = RAIDmod.raid0
             fileList = raid.split(FileToRaid["fName"],2,FileToRaid["filePath"])
@@ -287,14 +283,26 @@ class raidThread(threading.Thread):
                     "command":"upload"
                 }
                 try:
-                    t1 = SFTPThread(message, storageNodeUploadList[i])
-                    threads.append(t1)
-                    t1.start()
+                    
+                    fileSize = os.path.getsize(os.path.join(FileToRaid["filePath"], fileList[i]))
+                    print(fileSize)
+                    Files.objects.create(
+                        owner=self.obj.owner, 
+                        FID = self.obj.FID,
+                        SID = storageNodeUploadList[i]["SID"], 
+                        fileName = self.obj.fileName, 
+                        file = self.obj.file, 
+                        actualSize = fileSize,
+                        RAIDtype = self.RAIDtype
+                        )
+                    
+                    # t1 = SFTPThread(message, storageNodeUploadList[i])
+                    # threads.append(t1)
+                    # t1.start()
                     
                 except Exception as e:
                     #Todo Function when false it must delete file from db 
                     print(e)
-
             
         elif self.RAIDtype == "1":
             #upload to 2 storage nodes
@@ -334,8 +342,7 @@ class raidThread(threading.Thread):
                 except Exception as e:
                     #Todo Function when false it must delete file from db 
                     print(e)
-       
-            
+                    
         else:
             raid = RAIDmod.pRAID()
             
