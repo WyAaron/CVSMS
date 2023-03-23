@@ -30,7 +30,7 @@ def Registration(client,config):
         client.sendall(json.dumps(Register).encode())
         data = client.recv(1024)
         #TODO: {StorageIP,storageport,allocsize,SID}
-        with open(os.path.join(os.getcwd(),"Config.json"), 'w', encoding='utf-8-sig') as f:
+        with open(os.path.join(os.getcwd(),"Config2.json"), 'w', encoding='utf-8-sig') as f:
             config["Registered"] = True
             json.dump(config,f)
             f.close()
@@ -77,7 +77,7 @@ def main():
     IP = "localhost"
     PORT = 7777
     bufferSize = 1024 
-    with open(os.path.join(os.getcwd(),"Config.json"), 'r', encoding='utf-8-sig') as f:
+    with open(os.path.join(os.getcwd(),"Config2.json"), 'r', encoding='utf-8-sig') as f:
             config = json.loads(f.read())  
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as client: 
         client.connect((config["serverIP"],config["serverPort"]))

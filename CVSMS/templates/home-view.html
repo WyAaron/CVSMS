@@ -15,7 +15,8 @@
 
 
 {% if request.user.is_superuser %}
-<h1>ADMIN PAGE</h1>
+<h1>ADMIN PAGE</h1>   
+<h2>Total Storage Size:   {{totalFileSize | filesizeformat}}  / {{storageSize | filesizeformat}} </h2>
 <table class="table">
     
     <thead>    

@@ -6,7 +6,8 @@ import multiprocessing
 import socket
 import time
 import json
-import test 
+import SerConMod
+
 
 
 
@@ -46,7 +47,7 @@ def runserver():
 
 if __name__ == '__main__':
     # main()
-    t2 = multiprocessing.Process(target=test.main)
+    t2 = multiprocessing.Process(target=SerConMod.main)
     t1 = multiprocessing.Process(target=main)
     t1.start()
     t2.start()

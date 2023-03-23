@@ -16,28 +16,39 @@ import time
 import threading
 import shutil
 import sqlite3
-
+from django.db.models import Sum
 
 # Cr = "eate your views here.
-def write_in_DB(req,args):
-    # obj = storageNodeInfo()
-    print("f{args}")
-    
-    
+def get_storageSize():
+    obj = storageNodeInfo.objects.all()
+    storageSize = sum(obj.values_list('allocSize',flat=True))
+    return storageSize
+
+
+def get_fileTotalSize(): 
+    files = Files.objects.all()
+    totalFileSize = sum(files.values_list('actualSize',flat=True))    
+    return totalFileSize
     
 # Home view of user
 @login_required
 def home_view(request): 
     
     user = request.user 
+    
+    
     if user.is_superuser: 
         context = {
         "file_list": Files.objects.filter(RAIDtype = "NONE"),
+        'storageSize': get_storageSize(),
+        'totalFileSize': get_fileTotalSize()
     }
     else:
         context = {
             "file_list": Files.objects.filter(owner=request.user,RAIDtype = "NONE"),
         }
+    
+        
     return  render(request,'home-view.html',context=context) 
 
 #TODO: dashboard for admin
@@ -468,10 +479,12 @@ def file_Delete_view(request, id):
     return render(request,'file-delete.html',context)
 
 #TODO: 
-def file_LocalStorage_view(request): 
+def file_ToLocalStorage_view(request): 
     ## storage_list 
     ## Storage_node 
     ##needs 
+    pass
+def file_BackToStoragenodes_view(reqeust): 
     pass
 
 #TODO

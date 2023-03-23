@@ -1,1 +1,1 @@
-﻿{"storageIP": "192.168.100.240", "storagePort": 7778, "serverIP": "192.168.100.240", "serverPort": 7778, "SID": 1, "AllocSize": 1024, "Registered": true, "username": "ssh", "password": "password"}
+﻿{"storageIP": "192.168.123.13", "storagePort": 7755, "serverIP": "192.168.1.9", "serverPort": 7777, "SID": "Test-PC1", "AllocSize": 10000000000, "Registered": true, "username": "ssh", "password": "password"}

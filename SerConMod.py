@@ -12,10 +12,10 @@ def getCurrTime():
     return current_time
         
 
-def storageRegister(SID,allocSize,storageIp,port): 
+def storageRegister(allocSize,storageIp ,port,maxSize,SID): 
     conn = sqlite3.connect("db.sqlite3")
     c = conn.cursor()
-    c.execute("INSERT INTO CVSMS_storageNodeInfo VALUES (?,?,?,?,?)",(None,SID,allocSize,storageIp,port))
+    c.execute("INSERT INTO CVSMS_storageNodeInfo VALUES (?,?,?,?,?,?)",(None,allocSize,storageIp ,port,maxSize,SID))
     conn.commit()
     print(f'{SID} - {storageIp} inserted at table')
     conn.close()
@@ -37,7 +37,7 @@ def StorageConnection(conn,addr):
         dataFromClient = json.loads(data.decode())
         if dataFromClient["command"] == "Register": 
             #----------------- INSERT DB CALL REGISTER-------######
-            storageRegister(dataFromClient["SID"],dataFromClient["allocSize"],dataFromClient["storageIp"],dataFromClient["storagePort"]) 
+            storageRegister(dataFromClient["allocSize"],dataFromClient["storageIp"],dataFromClient["storagePort"],dataFromClient["allocSize"],dataFromClient["SID"]) 
             print(f'User Connected: {dataFromClient}')
             conn.sendall(msg.encode())
             # db(IP,POrt,SID,ALLOC,Registered)
@@ -47,7 +47,7 @@ def StorageConnection(conn,addr):
         elif dataFromClient["command"] == "Heartbeat":
             storageHeartbeat(dataFromClient["IP"],dataFromClient["port"],dataFromClient["status"],getCurrTime())
             conn.sendall(msg.encode())
-            print(f'SENT ACK to {addr}   \n')
+            print(f' ACK {dataFromClient["SID"] } {addr}   \n')
                 
 
 
@@ -57,7 +57,7 @@ def StorageConnection(conn,addr):
 
 def main(): 
     ctr = 1
-    IP= "localhost"
+    IP= "192.168.1.9"
     PORT= 7777
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as server: 
         server.bind((IP,PORT))
