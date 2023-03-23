@@ -26,10 +26,69 @@ def get_storageSize():
 
 
 def get_fileTotalSize(): 
-    files = Files.objects.filter(RAIDtype="NONE")
+    files = Files.objects.all()
     totalFileSize = sum(files.values_list('actualSize',flat=True))    
     return totalFileSize
+
+def findStorNode(storNodeList, fileSize):
+    storNodeForFile = None
+    storNodeList = sorted(storNodeList, key=lambda x: x['maxSize'], reverse=True)
+    # storNodeList = sorted(storNodeList, reverse=True)
+    for i in range(len(storNodeList)):
+        #print(f"{storNodeList[i]} < {fileSize} = {storNodeList[i] < fileSize}")
+        if storNodeList[i]["maxSize"] >= fileSize:
+            
+            storNodeForFile = storNodeList[i]
+        elif storNodeList[i]["maxSize"] < fileSize:
+            break
+    if storNodeForFile == None:
+        return storNodeList, storNodeForFile
     
+    else:
+        
+        # print()
+        storNodeList.pop(i)
+        
+        return storNodeList, storNodeForFile
+
+
+def getAvailableStorNode(storNodeList, fileList):
+    storList = []
+    
+    tempList = storNodeList
+    fileList = sorted(fileList, key=lambda x: x['fSize'], reverse=True)
+    if len(tempList) >= len(fileList):
+        for i in fileList:
+            
+            tempList, storNode = findStorNode(tempList, i['fSize'])
+
+            #print(len(fileList))
+            if storNode:
+                storList.append({"fileMD" : i, "storageNode" : storNode})
+    
+    if len(storList) == len(fileList): 
+        return storList
+    else:
+        return[]
+
+def getStorageNodes(fileList, storageNodeList, path):
+    #GET THE FILE SIZE FOR EACH PART
+        tempFileList = []
+        for i in range(len(fileList)):
+            fileSize = os.path.getsize(os.path.join(path, fileList[i]))
+            
+            tempFileMD = {
+                "fName": fileList[i],
+                "fSize": fileSize
+            }
+            
+            tempFileList.append(tempFileMD)
+            
+        #SORT THE FILES IN ASCENDING ORDER BASED ON THEIR SIZE 
+        return getAvailableStorNode(storageNodeList, tempFileList)
+    
+    
+ 
 # Home view of user
 @login_required
 def home_view(request): 
@@ -63,7 +122,7 @@ def home_view(request):
 #         }
 
     # return render(request, 'detail.html', context=context)
-#TODO: next Version 
+
 @login_required
 def fileSearch_view(request):
     query_dict =  request.GET 
@@ -117,34 +176,36 @@ def file_Upload_view(request):
                 FID = 1   
             obj = Files.objects.create(owner=request.user, fileName= request.FILES["file"],file=request.FILES['file'],actualSize=request.FILES["file"].size,FID=FID)
             #TODO CONNECTED STORAGE NODES
-            storageNode = {
-                
-                "SID":1,
-                "AllocSize":1000,
-                "IP":"192.168.0.225",
-                "PORT":5001,
-            }
-            
+
+                        
             cwd = os.path.dirname(obj.file.path)
             fName = os.listdir(cwd)[0]
 
-            message = {
-            "fName": fName,
-            "FID" : obj.FID,
-            "cwd" : cwd,
-            "command":"upload"
-            }
-            messages.info(request,f'File has been uploaded!')
-            try:
-                
-                t1 = SFTPThread(message, storageNode)
-                t1.start()
 
-                
-            except Exception as e:
-                #Todo Function when false it must delete file from db 
-                print(e)
+            storageNodeList = serverDButil.getStorageNodesFromDB()
+            storageNode = getStorageNodes([fName], storageNodeList, cwd)[0]["storageNode"]
             
+            print(storageNode)
+            if storageNode:
+                message = {
+                "fName": fName,
+                "FID" : obj.FID,
+                "cwd" : cwd,
+                "command":"upload"
+                }
+                messages.info(request,f'File has been uploaded!')
+                try:
+                    
+                    t1 = SFTPThread(message, storageNode)
+                    t1.start()
+
+                    
+                except Exception as e:
+                    #Todo Function when false it must delete file from db 
+                    print(e)
+            else:
+                serverDButil.delMD(FID)
+                messages.info("There is no more space")
             
             #CREATE DB ENTRY FOR FILE SAVED
             
@@ -175,9 +236,9 @@ def file_Retreive_view(request,id):
     #TODO CONNECTED STORAGE NODES
     storageNode = {        
             "SID":1,
-            "AllocSize":1000,
+            "allocSize":1000,
             "IP":"192.168.0.225",
-            "PORT":5001,
+            "port":5001,
         }
     #GET DATA FROM DB
     message = {
@@ -215,50 +276,7 @@ def file_Retreive_view(request,id):
     return redirect('/')
 
 
-def findStorNode(storNodeList, fileSize):
-    storNodeForFile = None
-    storNodeList = sorted(storNodeList, key=lambda x: x['maxSize'], reverse=True)
-    # storNodeList = sorted(storNodeList, reverse=True)
-    for i in range(len(storNodeList)):
-        #print(f"{storNodeList[i]} < {fileSize} = {storNodeList[i] < fileSize}")
-        if storNodeList[i]["maxSize"] >= fileSize:
-            storNodeForFile = storNodeList[i]
-        elif storNodeList[i]["maxSize"] < fileSize:
-            break
-    if storNodeForFile == None:
-        return storNodeList, storNodeForFile
-    else:
-        storNodeList.pop(i-1)
-        return storNodeList, storNodeForFile
 
-
-def getAvailableStorNode(storNodeList, fileList):
-    storList = []
-    fileList = sorted(fileList, key=lambda x: x['fSize'], reverse=True)
-    if len(storNodeList) >= len(fileList):
-        for i in fileList:
-            tempList, storNode = findStorNode(storNodeList,i['fSize'])
-            if storNode:
-                storList.append({"fileMD" : i, "storageNode" : storNode})
-                storNodeList = tempList
-    return storList
-
-def getStorageNodes(fileList, storageNodeList, path):
-    #GET THE FILE SIZE FOR EACH PART
-        tempFileList = []
-        for i in range(len(fileList)):
-            fileSize = os.path.getsize(os.path.join(path, fileList[i]))
-            
-            tempFileMD = {
-                "fName": fileList[i],
-                "fSize": fileSize
-            }
-            
-            tempFileList.append(tempFileMD)
-        #SORT THE FILES IN ASCENDING ORDER BASED ON THEIR SIZE 
-        return getAvailableStorNode(storageNodeList, tempFileList)
-    
-    
 class raidThread(threading.Thread):
     def __init__(self,obj,RAIDtype):
         # execute the base constructor
@@ -286,10 +304,10 @@ class raidThread(threading.Thread):
         
         storageNode = {        
                     "SID":1,
-                    "AllocSize":1000,
-                    "MaxSize": 1000,
+                    "allocSize":1000,
+                    "maxSize": 1000,
                     "IP":"192.168.0.225",
-                    "PORT":5001,
+                    "port":5001,
             }
         #SFTP THE FILE FROM THE STORAGE NODE
         message = {
@@ -313,151 +331,128 @@ class raidThread(threading.Thread):
             raid = RAIDmod.raid0
             fileList = raid.split(FileToRaid["fName"],2,FileToRaid["filePath"])
             
-            
+            threads = []
             storageNodeList = serverDButil.getStorageNodesFromDB()
             
-            threads = []
-            #SEND THE SPLIT FILES TO THE STORAGE NODES
-
-            fileStoragePair = getStorageNodes(fileList, storageNodeList, FileToRaid["filePath"])
             
-            print("hello")
-            for i in fileStoragePair:
-                message = {
-                    "fName": i["fileMD"]["fName"],
-                    "FID" : FileToRaid["FID"],
-                    "cwd" : FileToRaid["filePath"],
-                    "command":"upload"
-                }
-                try:
-                    
-                    for i in fileStoragePair:
+            #SEND THE SPLIT FILES TO THE STORAGE NODES
+            fileStorPair = getStorageNodes(fileList, storageNodeList, FileToRaid["filePath"])
+            
+            if len(fileStorPair) == len(fileList):
+            
+                for i in fileStorPair:
+                    message = {
+                        "fName": i["fileMD"]["fName"],
+                        "FID" : FileToRaid["FID"],
+                        "cwd" : FileToRaid["filePath"],
+                        "command":"upload"
+                    }
+                    try:
                         
-                        print(i)
-                    # Files.objects.create(
-                    #     owner=self.obj.owner, 
-                    #     FID = self.obj.FID,
-                    #     SID = storageNodeUploadList[i]["SID"], 
-                    #     fileName = self.obj.fileName, 
-                    #     file = self.obj.file, 
-                    #     actualSize = i["fileMD"]["fSize"],
-                    #     RAIDtype = self.RAIDtype      
-                    #     )
+                        Files.objects.create(
+                            owner=self.obj.owner, 
+                            FID = self.obj.FID,
+                            SID = i["storageNode"]["SID"], 
+                            fileName = self.obj.fileName, 
+                            file = self.obj.file, 
+                            actualSize = i["fileMD"]["fSize"],
+                            RAIDtype = self.RAIDtype      
+                            )
+                        
+                        t1 = SFTPThread(message, i["storageNode"])
+                        threads.append(t1)
+                        t1.start()
+                        
+                    except Exception as e:
+                        #Todo Function when false it must delete file from db 
+                        print(e)
+            else:
+                messages.info("Not enough storage Nodes")
                     
-                    # t1 = SFTPThread(message, i["storageNode"])
-                    # threads.append(t1)
-                    # t1.start()
-                    
-                except Exception as e:
-                    #Todo Function when false it must delete file from db 
-                    print(e)
             
         elif self.RAIDtype == "1":
             #upload to 2 storage nodes
-            storageNodeUploadList = [
-                {        
-                    "SID":1,
-                    "AllocSize":1000,
-                    "MaxSize": 1000,
-                    "IP":"192.168.0.225",
-                    "PORT":5002,
-                },
-                {        
-                    "SID":1,
-                    "AllocSize":1000,
-                    "MaxSize": 1000,
-                    "IP":"192.168.0.225",
-                    "PORT":5003,
-                }
-            ]
+            storageNodeList = serverDButil.getStorageNodesFromDB()
+            
+            fileList = []
+            
+            for i in range(2):
+                fileList.append(FileToRaid["fName"])
+            
+            #SEND THE SPLIT FILES TO THE STORAGE NODES
+            
             
             threads = []
+            fileStorPair = getStorageNodes(fileList, storageNodeList, FileToRaid["filePath"])
             
-            #DUPLOCATE THE FILES TO THE STORAGE NODES
-            for i in range(2):
-                
-                message = {
-                    "fName": FileToRaid["fName"],
-                    "FID" : FileToRaid["FID"],
-                    "cwd" : FileToRaid["filePath"],
-                    "command":"upload"
-                }
-                try:
-                    t1 = SFTPThread(message, storageNodeUploadList[i])
-                    threads.append(t1)
-                    t1.start()
-                    
-                except Exception as e:
-                    #Todo Function when false it must delete file from db 
-                    print(e)
-                    
+            if len(fileStorPair) == len(fileList):
+            
+                for i in fileStorPair:
+
+                    #DUPLOCATE THE FILES TO THE STORAGE NODES
+                    message = {
+                        "fName": i["fileMD"]["fName"],
+                        "FID" : FileToRaid["FID"],
+                        "cwd" : FileToRaid["filePath"],
+                        "command":"upload"
+                    }
+                    try:
+                        Files.objects.create(
+                            owner=self.obj.owner, 
+                            FID = self.obj.FID,
+                            SID = i["storageNode"]["SID"], 
+                            fileName = self.obj.fileName, 
+                            file = self.obj.file, 
+                            actualSize = i["fileMD"]["fSize"],
+                            RAIDtype = self.RAIDtype      
+                            )
+                        t1 = SFTPThread(message, i["storageNode"])
+                        threads.append(t1)
+                        t1.start()
+                    except Exception as e:
+                        #Todo Function when false it must delete file from db 
+                        print(e)
+            else:
+                messages.info("Not enough storage Nodes")
         else:
             raid = RAIDmod.pRAID()
             
             #storageNodeUploadList = get_Three_StorageNode_That_Can_Fit_The_File_Parts(self.storageNodeList, FileToRaid["fSize"])
-            storageNodeUploadList = [
-                {        
-                    "SID":1,
-                    "AllocSize":1000,
-                    "MaxSize": 1000,
-                    "IP":"192.168.0.225",
-                    "PORT":5002,
-                },
-                {        
-                    "SID":1,
-                    "AllocSize":1000,
-                    "MaxSize": 1000,
-                    "IP":"192.168.0.225",
-                    "PORT":5003,
-                },
-                {        
-                    "SID":1,
-                    "AllocSize":1000,
-                    "MaxSize": 1000,
-                    "IP":"192.168.0.225",
-                    "PORT":5004,
-                }
-            ]
+            storageNodeUploadList = serverDButil.getStorageNodesFromDB()
             fileList = raid.split(FileToRaid["fName"], FileToRaid["filePath"])
             # print(fileList)
             # #CREATE FUNCTION TO GENERATE LIST OF DIFFERENT STORAGE NODES
+            fileStorPair = getStorageNodes(fileList, storageNodeList, FileToRaid["filePath"])
             threads = []
-            
-            #SEND THE SPLIT FILES TO THE STORAGE NODES
-            for i in range(len(fileList)):
-                message = {
-                    "fName": fileList[i],
-                    "FID" : FileToRaid["FID"],
-                    "cwd" : FileToRaid["filePath"],
-                    "command":"upload"
-                }
-                try:
-                    t1 = SFTPThread(message, storageNodeUploadList[i])
-                    threads.append(t1)
-                    t1.start()
-                except Exception as e:
-                    print(e)
-
+            if len(fileStorPair) == len(fileList):
+                #SEND THE SPLIT FILES TO THE STORAGE NODES
+                for i in range(len(fileList)):
+                    message = {
+                        "fName": i["fileMD"]["fName"],
+                        "FID" : FileToRaid["FID"],
+                        "cwd" : FileToRaid["filePath"],
+                        "command":"upload"
+                    }
+                    try:
+                        print(i["fileMD"]["fName"])
+                        print(i["storageNode"]["port"])
+                        # Files.objects.create(
+                        #     owner=self.obj.owner, 
+                        #     FID = self.obj.FID,
+                        #     SID = i["storageNode"]["SID"], 
+                        #     fileName = self.obj.fileName, 
+                        #     file = self.obj.file, 
+                        #     actualSize = i["fileMD"]["fSize"],
+                        #     RAIDtype = self.RAIDtype      
+                        #     )
+                        # t1 = SFTPThread(message, i["storageNode"])
+                        # threads.append(t1)
+                        # t1.start()
+                    except Exception as e:
+                        print(e)
+            else:
+                messages.info("Not enough storage Nodes")   
                 
-            
-        #clean up files from server cache
-        # shutil.rmtree(FileToRaid["filePath"])
-        
-        #DELETE FROM OIGINAL STORAGE NODE
-        # message = {
-        #         "fName": fileList[i],
-        #         "FID" : FileToRaid["FID"],
-        #         "cwd" : FileToRaid["filePath"],
-        #         "command":"upload"
-        #     }
-        #
-        #t1 = SFTPThread(message, storageNodeUploadList[i])
-        
-        
-        
-        # block for a momet
-        # display a message
-
 def file_RAID_view(request,id): 
     
     context = {
@@ -481,30 +476,24 @@ def file_RAID_view(request,id):
         if form.is_valid():
             t1 = raidThread(obj,RAIDtype)
             t1.start()
-            #VARIABLE#
-            #INSERT FUNCTION YOUR Function
-            # 
-            # 
-            # #
             return redirect('/')
         else: 
             form = RAIDForm()
     return render(request,'file-RAID.html',context=context)
 
 
-class deleteThread(threading.Thread): 
-    def __init__(self,obj): 
-        threading.Thread.__init__(self)
-        self.obj = obj
-    def run(self): 
-        self.obj.delete()  
-        time.sleep(5)
-        print(f'Deleted file!')  
+
     
 def file_Delete_view(request, id): 
     file = Files.objects.get(id=id)
-    if request.method == "POST": 
-        delete = deleteThread(file)   
+    if request.method == "POST":
+        
+        
+        message = {
+            "fName": fName,
+            "FID" : file.FID,
+        } 
+        t1 = SFTPThread(message, )   
         delete.start()    
         
         return home_view(request)
@@ -517,9 +506,7 @@ def file_Delete_view(request, id):
 #TODO: 
 def file_toLocalStorage_view(request,id): 
     obj = Files.objects.get(id = id)
-    
-    
-    
+    #Testing
     context = {
         "file": obj
     }
@@ -529,12 +516,7 @@ def file_toLocalStorage_view(request,id):
         return redirect('/')
     
     return render(request, 'file-toLocalStorage.html',context)
-    
 
-    ## storage_list 
-    ## Storage_node 
-    ##needs 
-    pass
 def file_backToStorageNodes_view(request,id): 
     obj = Files.objects.get(id = id)
     
@@ -547,7 +529,6 @@ def file_backToStorageNodes_view(request,id):
         return redirect('/')
     
     return render(request, 'file-backToStorageNodes.html',context)
-    
 
 #TODO
 def file_UNRAID_view(request,id):

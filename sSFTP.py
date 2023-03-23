@@ -37,12 +37,15 @@
 import socket
 import os
 import json
+import shutil
+import serverDButil
 
 def upload(message,storageNode):
     host = storageNode["IP"]
-    port = storageNode["PORT"]
+    port = storageNode["port"]
     
     fName = message["fName"]
+    fID = message["FID"]
 
     #CONNECTING TO STORAGE NODE
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM)as s:
@@ -51,14 +54,12 @@ def upload(message,storageNode):
         #GENERATE COMMAND MESSAGE FOR STORAGE NODE 
         messageToNode= {
             "fName": fName,
-            "FID" : 1,
+            "FID" : fID,
             "command" : message["command"],
             "cwd" : message["cwd"]
             }
         
         #SEND COMMAND TO STORAGE NODE
-   
-        
         messageToNode = json.dumps(messageToNode)
         messageToNode = messageToNode.encode()    
         s.sendall(messageToNode)
@@ -68,17 +69,22 @@ def upload(message,storageNode):
         
         #WAIT FOR STORAGE NODE TO FINISH DOWNLOADING
         data = s.recv(1024)
-        
+        data = data.decode()
         #DELETE FILE AFTER STORAGE NODE FINISH DOWNLOADING
-        if data.decode() == "ok":
+        if data:
+            
+            serverDButil.updateMaxSize(data["maxSize"], storageNode["SID"])
+            serverDButil.updateFileStartMD(data["start"], fID)
             print("Storage Node successful download")
-            os.remove(fName)
+            #shutil.rmtree(os.path.join(message["cwd"]))
+            #os.remove(os.path.join(message["cwd"],fName))
 
 def download(message,storageNode):
     host = storageNode["IP"]
-    port = storageNode["PORT"]
+    port = storageNode["port"]
     
     fName = message["fName"]
+    fID = message["FID"]
     
     #CONNECT TO STORAGE NODE
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM)as s:
@@ -87,7 +93,7 @@ def download(message,storageNode):
         #GENERATE COMMAND MESSAGE FOR STORAGE NODE 
         message = {
                 "fName": fName,
-                "FID" : 1,
+                "FID" : fID,
                 "command" : message["command"],
                 "cwd" : message["cwd"]
                 }
@@ -109,3 +115,39 @@ def download(message,storageNode):
             print("ERROR FROM STORANGE NODE UPLOAD")
 
 
+def delete(message,storageNode):
+    host = storageNode["IP"]
+    port = storageNode["port"]
+    
+    fName = message["fName"]
+    fID = message["FID"]
+    
+    #CONNECT TO STORAGE NODE
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM)as s:
+        s.connect((host,port))
+        
+        #GENERATE COMMAND MESSAGE FOR STORAGE NODE 
+        message = {
+                "fName": fName,
+                "FID" : fID,
+                "command" : message["command"],
+                "cwd" : message["cwd"]
+                }
+        message = json.dumps(message)
+        message = message.encode()    
+        s.sendall(message)
+        
+        print("Storage Node is Deleteing")
+        
+        #WAIT FOR STORAGE NODE's REPLY THAT IT IS DONE UPLOADING
+        data = s.recv(1024)
+        data = data.decode()
+        
+        #ONCE STORAGE NODE IS DONE UPLOADING 
+        #INFORM USER THAT UPLOADING IS DONE AND FILE THE CAN BE DOWNLOADED
+        if data:
+            serverDButil.delMD(fID)
+            serverDButil.updateMaxSize(data["maxSize"], storageNode["SID"])
+            print("Storage Node successful delete")
+        else:
+            print("ERROR FROM STORANGE NODE UPLOAD")
