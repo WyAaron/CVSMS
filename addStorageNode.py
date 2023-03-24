@@ -135,10 +135,15 @@ import serverDButil
 
 # getStorageNode(["Storage-2"])
 
-import math
+# import math
 
-val = 52428799  
+# val = 52428799  
 
-MB = 2 ** 20
-print( math.ceil(val/25*MB%2) )
+# MB = 2 ** 20
+# print( math.ceil(val/25*MB%2) )
 
+possibleParts = set([0, 1, "p"])
+parts = set ([0,1])
+
+
+print(list(possibleParts - parts )[0])

@@ -190,12 +190,10 @@ class pRAID:
         
         # Define the list of possible inputs
         possibleParts = set([0, 1, "p"])
-
+        
         # Determine which input was not chosen
         partList = set([partNum1,partNum2])
-    
-        recoveredPart = list(possibleParts - partList)[0]
-                
+        recoveredPart = list(possibleParts - partList )[0]
         with open(os.path.join(storageLocation,f"{fName}-{recoveredPart}"), "wb") as repairedFile:
             
             lastDataLen = None
@@ -254,12 +252,10 @@ class pRAID:
                     break
                 
                 lastLen = len(data)
-                print(lastLen)
                 temp+=len(data)
                 #progress_bar(temp, total_size , status="merging" )
                 
             #CHECK IF FILE IS CHUNKABLE
-            print(math.ceil(originalFile.tell() / 25*MB % 2))
             
             if math.ceil(originalFile.tell() / 25*MB % 2) != 2:
                 originalFile.seek(-lastLen*2,1)
