@@ -74,7 +74,8 @@ def upload(message,storageNode):
         if data:
             data = json.loads(data)
             serverDButil.updateMaxSize(data["maxSize"], storageNode["SID"])
-            serverDButil.updateFileStartMD(data["start"], fID)
+            
+            serverDButil.updateFileStartMD(data["start"], [fID])
             print("Storage Node successful download")
             
             #os.remove(os.path.join(message["cwd"],fName))

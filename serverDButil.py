@@ -87,16 +87,18 @@ def addStorageNode(SID, id):
 def updateMaxSize(maxSize, SID):
     conn = sqlite3.connect('db.sqlite3')
     c = conn.cursor()
+	
     c.execute("UPDATE CVSMS_storagenodeinfo SET maxSize = ? WHERE SID = ?",(maxSize, SID))
     conn.commit()
     conn.close()
 
 def updateFileStartMD(start, FID):
-    conn = sqlite3.connect('db.sqlite3')
-    c = conn.cursor()
-    c.execute("UPDATE CVSMS_files SET start = ? WHERE FID = ?",(start, FID))
-    conn.commit()
-    conn.close()
+	conn = sqlite3.connect('db.sqlite3')
+	c = conn.cursor()
+	FID = FID[0]
+	c.execute("UPDATE CVSMS_files SET start = ? WHERE FID = ?",(start, FID))
+	conn.commit()
+	conn.close()
 
 
 ########## Delete entry - per FID ##########
