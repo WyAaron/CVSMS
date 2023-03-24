@@ -77,9 +77,11 @@
             <div>
                 {% if request.user.is_authenticated %}
                 <h1> <a href="/">Welcome {{request.user}} to  CVSMS</a> </h1>
+                {% if request.user.is_superuser %}
                 <a href="{% url 'user' %}"> Users</a> |
-                <a href="{% url 'file-upload' %}"> upload File</a> |
                 <a href="{% url 'get-statusOfNodes' %}">Node Status |</a>
+                {% endif %}
+                <a href="{% url 'file-upload' %}"> upload File</a> |
                 <a href="{% url 'logout'  %}">Logout</a> 
                     
                 {% else %}
