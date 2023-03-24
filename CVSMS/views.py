@@ -26,7 +26,7 @@ def get_storageSize():
 
 
 def get_fileTotalSize(): 
-    files = Files.objects.filter(RAIDid = -1)
+    files = Files.objects.filter(RAIDid = -1)    
     totalFileSize = sum(files.values_list('actualSize',flat=True))    
     return totalFileSize
 
@@ -312,7 +312,7 @@ def file_Retreive_view(request,id):
         if os.path.getsize(os.path.join(cwd,fName)) == obj.actualSize: #File complete download from storage node
             if request.method == "GET": 
                 file_download = get_object_or_404(Files, pk = id )
-                response = HttpResponse(file_download.file, content_type='application/pdf')
+                response = HttpResponse(file_download.file, content_type='multipart/form-data')
                 response['Content-Disposition'] =f'attactments; filename="{file_download.fileName}"' 
                 return response
         else: # file is downloading from storage node
