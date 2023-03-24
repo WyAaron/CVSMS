@@ -4,12 +4,8 @@ import os
 import sys
 import multiprocessing,threading
 import SerConMod
-import fileMod
-import storageNodeMD
-# Setup to easily reuse byte sizes
-KB = 2 ** 10
-MB = 2 ** 20
-GB = 2 ** 30
+
+
 
 
 def main():
@@ -32,8 +28,7 @@ def main():
 
 
 if __name__ == '__main__':
-    fileMod.CreateAlloc(1*GB,"storage")
-    storageNodeMD.createMD()
+    
     # main()
     t1 = multiprocessing.Process(target=main)
     t2 = multiprocessing.Process(target=SerConMod.main)

@@ -53,7 +53,7 @@
         <td><a href="{% url 'file-backToStorageNodes' file.id %}">{{file.SID}}</a></td>
        
         {% else %}
-        <td>{{file.SID}}</td>
+        <td><a href="{% url 'file-toLocalStorage' file.id %}"> {{file.SID}}</a></td>
         {% endif %}
         
         {% empty %}
