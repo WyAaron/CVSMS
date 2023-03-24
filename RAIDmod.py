@@ -1,6 +1,7 @@
 import os
 import time
 import numpy as np
+import math
 
 KB = 2 ** 10
 MB = 2 ** 20
@@ -122,9 +123,16 @@ class pRAID:
         with open(os.path.join(storageLocation,fName), "rb") as originalFile, open(os.path.join(storageLocation,f"{fName}-p"), "wb") as parityFile:
             temp = 0
             #WRITE THE FILE IN EACH PART 
+            once = 0
             while True:
                 # GET DATA FROM ORIGINAL FILE
                 data = originalFile.read(25*MB)
+                if not data and once >1:
+                    break
+                    
+                once+=1
+                if len(data) < 25*MB:
+                    data += bytes(25*MB - len(data))
                 
                 #PUT DATA IN FILE PART
                 fileList[ctr].write(data)
@@ -146,8 +154,7 @@ class pRAID:
 
                 # CHECK IF END OF FILE
                 #temp+= len(data)
-                if not data:
-                    break
+                
                 #progress_bar(temp, os.path.getsize(fName), status="splitting" )
             
         #CLOSE ALL THE FILES
@@ -182,16 +189,12 @@ class pRAID:
         parity = open (os.path.join(storageLocation,f"{fName}-{partNum2}"), "rb")
         
         # Define the list of possible inputs
-        possibleParts = [0, 1, "p"]
-
+        possibleParts = set([0, 1, "p"])
+        
         # Determine which input was not chosen
-        if partNum1 in possibleParts and partNum2 in possibleParts:
-            for part in possibleParts:
-                if part != partNum1 and part != partNum2:
-                    recoveredPart = part
-                    break
-                
-        with open(os.path.join(storageLocation,f"{fName}-{recoveredPart}"), "wb+") as repairedFile:
+        partList = set([partNum1,partNum2])
+        recoveredPart = list(possibleParts - partList )[0]
+        with open(os.path.join(storageLocation,f"{fName}-{recoveredPart}"), "wb") as repairedFile:
             
             lastDataLen = None
             while True:
@@ -201,9 +204,6 @@ class pRAID:
                 
                 #PERFORM AN XOR OPERATION TO RECOVER THE LOST DATA
                 parityChunk = self.xor_chunks(validData, parityData)
-                #GET THE LENGTH OF THE LAST DATA CHUNK IF IT IS NOT EMPTY
-                if len(parityChunk) != 0:
-                    lastDataLen = len(parityChunk)
                     
                 #WRITE THE RECOVERED DATA ON THE RECOVERING FILE
                 repairedFile.write(parityChunk)
@@ -212,10 +212,7 @@ class pRAID:
                     break
                 
                 
-            #REMOVE TRAILING NULL BYTES FROM THE RECOVERED FILE
-            repairedFile.seek(-lastDataLen, 1)
-            repairedFile.truncate(repairedFile.tell())
-            repairedFile.write(parityChunk.rstrip(b'\x00'))
+
             
         validPart.close()
         parity.close()
@@ -229,7 +226,7 @@ class pRAID:
             fileList.append(open(os.path.join(storageLocation,i), "rb"))
         
         #OPEN MAIN FILE FOR WRITING
-        with open(os.path.join(storageLocation,fName), "wb") as originalFile:
+        with open(os.path.join(storageLocation,fName), "wb+") as originalFile:
             temp = 0
             
             #progress bar variables
@@ -253,21 +250,40 @@ class pRAID:
                 # CHECK IF END OF FILE
                 if not data:
                     break
+                
+                lastLen = len(data)
                 temp+=len(data)
                 #progress_bar(temp, total_size , status="merging" )
+                
+            #CHECK IF FILE IS CHUNKABLE
+            
+            if math.ceil(originalFile.tell() / 25*MB % 2) != 2:
+                originalFile.seek(-lastLen*2,1)
+                data = originalFile.read(25*MB*2)
+                originalFile.seek(-lastLen*2,1)
+                originalFile.truncate(originalFile.tell())
+                originalFile.write(data.rstrip(b'\x00'))
+            else:
+                originalFile.seek(-lastLen,1)
+                data = originalFile.read(25*MB)
+                originalFile.seek(-lastLen,1)
+                originalFile.truncate(originalFile.tell())
+                originalFile.write(data.rstrip(b'\x00'))
+            
         #CLOSE ALL THE FILES
         for i in fileList:
             i.close()  
 
 def main():
-    fName = "hello.txt"
+    fName = "test.jpg"
     raid = pRAID()
+    fileList = ['test.jpg-0', 'test.jpg-1']
     #print(raid.split(fName,"splitStorage"))
     
-    #raid.repair(fName,0,1, "splitStorage")
+    #raid.repair(fName,0,"p", "splitStorage")
     #fileList = ['hello.txt-0', 'hello.txt-1', 'hello.txt-p']
     #fileList = ['tempvid.mp4-0', 'tempvid.mp4-1']
-    #raid.merge(fName, fileList,"splitStorage")
+    raid.merge(fName, fileList,"splitStorage")
     
     # Setup to easily reuse byte sizes
     
@@ -277,9 +293,9 @@ def main():
     # else:
     #     raid0recover(fName)
 
-    RAID0 = raid0
-    fList = ['tempvid.mp4-0', 'tempvid.mp4-1']
-    print(raid0.split(fName, 2, "splitStorage"))
+    # RAID0 = raid0
+    
+    # print(raid0.split(fName, 2, "splitStorage"))
     #raid0.merge(fName, fList, "splitStorage")
     
     

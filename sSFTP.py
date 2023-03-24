@@ -76,10 +76,10 @@ def upload(message,storageNode):
             serverDButil.updateMaxSize(data["maxSize"], storageNode["SID"])
             serverDButil.updateFileStartMD(data["start"], fID)
             print("Storage Node successful download")
-            shutil.rmtree(os.path.join(message["cwd"]))
+            
             #os.remove(os.path.join(message["cwd"],fName))
 
-def download(message,storageNode, isRaid = False):
+def download(message,storageNode):
     host = storageNode["IP"]
     port = storageNode["port"]
     
@@ -112,20 +112,12 @@ def download(message,storageNode, isRaid = False):
         if data.decode() == "ok":
             print("Storage Node successful upload")
             
-            if isRaid:
-                serverDButil.removeStorageNodeFromFileMD([fID])
-                message = {
-                "fName": fName,
-                "FID" : fID,
-                "command" : "delete",
-                "cwd" : message["cwd"]
-                }
-                delete(message, storageNode)
+                
         else:
             print("ERROR FROM STORANGE NODE UPLOAD")
 
 
-def delete(message,storageNode):
+def delete(message,storageNode, isRaid = False):
     host = storageNode["IP"]
     port = storageNode["port"]
     
@@ -154,7 +146,8 @@ def delete(message,storageNode):
         #INFORM USER THAT UPLOADING IS DONE AND FILE THE CAN BE DOWNLOADED
         if data:
             data = json.loads(data)
-            serverDButil.delMD([fID])
+            if not isRaid:
+                serverDButil.delMD([fID])
             print(fID)
             serverDButil.updateMaxSize(data["maxSize"], storageNode["SID"])
             print("Storage Node successful delete")

@@ -48,7 +48,7 @@ def searchMD(id):
 
 
 ########## Edit entry - per FID ##########
-def editMDraid(id, RAIDtype):
+def updateRaidType(RAIDtype, id):
 	conn = sqlite3.connect('db.sqlite3')
 	c = conn.cursor()
 
