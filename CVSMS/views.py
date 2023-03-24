@@ -661,9 +661,13 @@ def file_Delete_view(request, id):
         storageNodeList = getCurrentFileStorageNodes(file.FID)
         
         
-     
+        message = {
+            # "fName": fName,
+            "FID" : file.FID,
+        } 
+        t1 = SFTPThread(message, )   
         # delete.start() 
-        message = {   
+        {   
         "FID" : file.FID,
         "command" : "delete"
         }
