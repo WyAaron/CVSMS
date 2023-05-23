@@ -7,9 +7,9 @@ from CVSMS.models import  Files,storageNodeInfo
 from .forms import FileForm,RAIDForm
 from django.contrib.auth.models import User
 from django.shortcuts import get_object_or_404
-import sSFTP
-import RAIDmod
-import serverDButil
+import modules.sSFTP as sSFTP
+import modules.RAIDmod as RAIDmod
+import modules.serverDButil as serverDButil
 import os 
 from django.http import HttpResponse
 from django.contrib import messages
@@ -108,7 +108,7 @@ def home_view(request):
         "file_list": Files.objects.filter(RAIDid = -1) , 
         #"file_list": Files.objects.all() ,
         'storageSize': get_storageSize(),
-        'totalFileSize': get_fileTotalSize()
+        'totalFileSize': get_fileTotalSize(),
     }
     else:
         context = {
