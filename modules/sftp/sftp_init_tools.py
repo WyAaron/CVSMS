@@ -1,44 +1,11 @@
-
-
-#-----------------SFTP INSTRUCTION--------------- DO NOT DELETE 
-# import paramiko
-# ssh = paramiko.SSHClient()
-# ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-
-# ubuntuIP = "192.168.0.213"
-# windowsIP = "192.168.0.225"
-# ssh.connect(hostname=windowsIP, username="Sandbox", password="password", port=22)
-
-# with ssh.open_sftp() as sftp_client:
-
-
-
-    
-#     fileName = "test.txt"
-    
-#     receivedFile = "received.txt"
-#     #ubuntu
-#     #sftp_client.get('/home/ssh/scp/'+fileName, receivedFile)
-
-    
-#     #windows
-#     #sftp_client.get('C:/Users/Sandbox/Desktop/fold/'+fileName, receivedFile)
-#     sftp_client.chdir('C:/Users/Sandbox/Desktop/fold/')
-#     # print(sftp_client.getcwd())
-#     # sftp_client.get(fileName, receivedFile)
-    
-#     sftp_client.put("hello.txt", "upload.txt")
-    
-    
-# ssh.close()
-#---------------------------------------------------------------------------
-
-
 import socket
 import os
 import json
 import shutil
-import modules.serverDButil as serverDButil
+import threading
+import modules.sqlite3.serverDButil as serverDButil
+import time
+
 
 def upload(message,storageNode):
     host = storageNode["IP"]
@@ -153,3 +120,4 @@ def delete(message,storageNode, isRaid = False):
             print("Storage Node successful delete")
         else:
             print("ERROR FROM STORANGE NODE UPLOAD")
+
