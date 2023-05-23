@@ -17,7 +17,7 @@ class Files(models.Model):
     owner = models.CharField(User, null=True,blank=True,max_length=300)
     FID = models.IntegerField(null=True)
     SID = models.CharField(null=True,max_length=256)
-    fileName = models.CharField(null=True, max_length=256)
+    fName = models.CharField(null=True, max_length=256)
     file = models.FileField(null=True,upload_to=file_path)    
     actualSize = models.IntegerField(null=True)
     start = models.IntegerField(null=True)
@@ -38,6 +38,7 @@ class storageNodeInfo(models.Model):
     port = models.IntegerField()
     maxSize = models.IntegerField(null=True)
     status = models.BooleanField(default=False)
+
 
 
 

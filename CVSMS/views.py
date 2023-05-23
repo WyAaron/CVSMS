@@ -28,7 +28,7 @@ import modules.sqlite3.serverDButil as serverDButil
 import modules.nodeTools.getTools as NodeGetTools
 
 #SFTP INITIALIZATION TOOLS, INCLUDES THREADING
-import modules.sftp.sftp_init_tools as sftp_init_tools
+import modules.sftp.sftp_tools as sftp_tools
 
 #MODULES FOR RAIDING FILES AND INITIATING ITS SFTP
 import modules.sftp.thread_sftp as thread_sftp
@@ -114,7 +114,7 @@ def file_Upload_view(request):
             #TODO CONNECTED STORAGE NODES
             obj = Files.objects.create(
             owner=request.user, 
-            fileName= request.FILES["file"],
+            fName= request.FILES["file"],
             file=request.FILES['file'],
             actualSize=request.FILES["file"].size,
             FID=FID)
@@ -126,9 +126,7 @@ def file_Upload_view(request):
             storageNodeList = serverDButil.getAllStorageNodes()
             storageNode = NodeGetTools.getStorageNodes([fName], storageNodeList, cwd)[0]["storageNode"]
             serverDButil.addStorageNode(storageNode["SID"],obj.FID)
-             
-             
-
+            
             if storageNode:
                 message = {
                 "fName": fName,
@@ -186,13 +184,13 @@ def file_Retreive_view(request,id):
     
     fileTuple = []
     
-    if fileList[0]["RAIDtype"] != "NONE":
-        for i in range(1,len(fileList)):
-            fileName = fileList[i]["fileName"]
-            fileTuple.append((fileName, storageNodeList[i-1]))
+    # if fileList[0]["RAIDtype"] != "NONE":
+    #     for i in range(1,len(fileList)):
+    #         fName = fileList[i]["fName"]
+    #         fileTuple.append((fName, storageNodeList[i-1]))
     
-    else:
-        fileTuple.append((fName, storageNodeList[0]))
+    # else:
+    #     fileTuple.append((fName, storageNodeList[0]))
         
 
     
@@ -212,7 +210,7 @@ def file_Retreive_view(request,id):
     if not os.path.isfile(os.path.join(cwd,fName)): #condition for file DNE in server
         messages.info(request,f'file started downloading from storage node.')
         # create the thread
-        thread = thread_sftp.download(message,fileTuple)
+        thread = thread_sftp.standard_get(message, fName, storageNodeList[0])
         # start the thread
         thread.start()
         return redirect('/')
@@ -226,7 +224,7 @@ def file_Retreive_view(request,id):
             if request.method == "GET": 
                 file_download = get_object_or_404(Files, pk = id )
                 response = HttpResponse(file_download.file, content_type='multipart/form-data')
-                response['Content-Disposition'] =f'attactments; filename="{file_download.fileName}"' 
+                response['Content-Disposition'] =f'attactments; fName="{file_download.fName}"' 
                 return response
         else: # file is downloading from storage node
             messages.info(request,f'file is downloading')
@@ -260,7 +258,7 @@ def file_RAID_view(request,id):
         
         
         if form.is_valid():
-            t1 = raidThread(obj,RAIDtype)
+            t1 = thread_sftp.raidThread(obj,RAIDtype)
             t1.start()
 
 
@@ -407,3 +405,4 @@ def deleteUser_view(request, username):
         return home_view(request)
 
     return home_view(request)
+

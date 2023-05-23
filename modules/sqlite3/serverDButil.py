@@ -104,7 +104,7 @@ def delMD(id):
 	conn = sqlite3.connect('db.sqlite3')
 	c = conn.cursor()
 
-	c.execute("DELETE from CVSMS_files WHERE FID = (?)", id)
+	c.execute("DELETE from CVSMS_files WHERE FID = ?", (id,))
 
 	conn.commit()
 	conn.close()

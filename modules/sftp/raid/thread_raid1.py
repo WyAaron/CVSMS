@@ -2,7 +2,7 @@ import os
 import threading
 import shutil
 
-import modules.sftp.sftp_init_tools as sftp_init_tools
+import modules.sftp.sftp_tools as sftp_tools
 import modules.nodeTools.getTools as NodeGetTools
 import modules.RAIDmod as RAIDmod
 import modules.sqlite3.serverDButil as serverDButil

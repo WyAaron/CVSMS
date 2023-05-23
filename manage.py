@@ -4,8 +4,23 @@ import os
 import sys
 import multiprocessing,threading
 import SerConMod
+import subprocess
 
+def find_process_id_by_port(port):
+    # Find the process ID (PID) associated with the port
+    cmd = f"lsof -i :{port} -t"
+    process = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    output, error = process.communicate()
+    if process.returncode == 0:
+        pid = int(output.decode().strip())
+        return pid
+    else:
+        return None
 
+def terminate_process_by_pid(pid):
+    # Terminate the process using the PID
+    cmd = f"kill {pid}"
+    subprocess.run(cmd, shell=True)
 
 
 def main():
@@ -31,9 +46,11 @@ if __name__ == '__main__':
     
     # main()
     t1 = multiprocessing.Process(target=main)
-    t2 = multiprocessing.Process(target=SerConMod.main)
     t1.start()
+    
+    t2 = multiprocessing.Process(target=SerConMod.main)
     t2.start()
+
     t1.join()
     t2.join()
     
