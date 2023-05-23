@@ -3,6 +3,8 @@ import time
 import os
 import shutil
 import modules.sftp.sftp_tools as sftp_tools 
+import modules.nodeTools.getTools as NodeGetTools
+import modules.RAIDmod as RAIDmod
 
 class SFTPThread(threading.Thread):
     def __init__(self, message, storageNode, deleteFolder = False):
@@ -140,14 +142,42 @@ class raidThread(threading.Thread):
     
     # override the run function
     def run(self):
+        cwd = os.path.dirname(self.obj.file.path)
+        fName = self.obj.fName
         
         message = {
-            "fName": self.obj.fName,
-            "FID" : self.message["FID"],
-            "cwd" : self.message["cwd"],
+            "fName": fName,
+            "FID" : self.obj.FID,
+            "cwd" : cwd,
             "command":"download"
         }
         
+        storageNode = NodeGetTools.getCurrentFileStorageNodes(self.obj.FID)[0]
+
+        #CHECK IF FILE EXISTS
+        if os.path.isfile(os.path.join(cwd,fName)): #condition for file DNE in server
+            print(f'file exists proceeding to RAID.')
+            
+        #CHECK IF DIRECTORY EXISTS
+        else:
+            if not os.path.exists(cwd):
+                os.mkdir(cwd)
+            else:
+                print("Directory Exists, Proceeding to SFTP")
+            # sftp_get = SFTPThread(message, storageNode)
+            # sftp_get.start()
         
-        SFTPThread(message, self.storageNode)
-        pass
+        if self.RAIDtype == "0":
+            #RAIDmod.raid0.split(fName, 2, cwd)
+            #RAIDmod.raid0.merge(fName, ["hello.txt-0","hello.txt-1"], cwd)
+            print("RAID 0")
+        elif self.RAIDtype == "1":
+            print("RAID 1")
+        elif self.RAIDtype == "PARITY":
+            #RAIDmod.pRAID.split(fName, cwd)
+            RAIDmod.pRAID.merge(fName, ["hello.txt-0","hello.txt-1"], cwd)
+            print("PARITY")
+            
+        
+
+

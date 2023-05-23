@@ -273,24 +273,29 @@ def file_RAID_view(request,id):
 def file_Delete_view(request, id): 
     file = Files.objects.get(id=id)
     if request.method == "POST":
-        storageNodeList = NodeGetTools.getCurrentFileStorageNodes(file.FID)
+        
+        print("DELETE FILE: "+ str(file.FID))
+        
+        serverDButil.delMD(file.FID)
+        
+        # storageNodeList = NodeGetTools.getCurrentFileStorageNodes(file.FID)
         
         
-        message = {
-            # "fName": fName,
-            "FID" : file.FID,
-        } 
-        t1 = thread_sftp.SFTPThread(message, )   
-        # delete.start() 
-        {   
-        "FID" : file.FID,
-        "command" : "delete"
-        }
+        # message = {
+        #     # "fName": fName,
+        #     "FID" : file.FID,
+        # } 
+        # t1 = thread_sftp.SFTPThread(message, )   
+        # # delete.start() 
+        # {   
+        # "FID" : file.FID,
+        # "command" : "delete"
+        # }
         
-        for i in storageNodeList:
-            if i != None:
-                t1 = thread_sftp.SFTPThread(message, i)   
-                t1.start()    
+        # for i in storageNodeList:
+        #     if i != None:
+        #         t1 = thread_sftp.SFTPThread(message, i)   
+        #         t1.start()    
 
         return redirect('/')
         # return redirect(success_url
@@ -405,4 +410,5 @@ def deleteUser_view(request, username):
         return home_view(request)
 
     return home_view(request)
+
 
