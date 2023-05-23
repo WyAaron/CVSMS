@@ -9,8 +9,8 @@ import modules.sqlite3.serverDButil as serverDButil
 
 from CVSMS.models import  Files,storageNodeInfo
 
-else:
-    pass
+# else:
+#     pass
     # raid = RAIDmod.pRAID()
     
     # #storageNodeUploadList = get_Three_StorageNode_That_Can_Fit_The_File_Parts(self.storageNodeList, FileToRaid["fSize"])

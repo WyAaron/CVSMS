@@ -74,9 +74,12 @@ def StorageConnection(conn,addr):
             print(repr(e))
             break
 def main(): 
-    IP= "192.168.1.9"
-    PORT= 7777
-    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as server: 
+    IP= "192.168.0.226"
+    PORT= 5000
+    
+    
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as server:
+        server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1) 
         server.bind((IP,PORT))
         server.listen()
         while True: 

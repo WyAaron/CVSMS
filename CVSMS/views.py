@@ -32,9 +32,9 @@ import modules.sftp.sftp_init_tools as sftp_init_tools
 
 #MODULES FOR RAIDING FILES AND INITIATING ITS SFTP
 import modules.sftp.thread_sftp as thread_sftp
-import modules.sftp.thread_raid0 as thread_raid0
-import modules.sftp.thread_raid1 as thread_raid1
-import modules.sftp.thread_praid as thread_praid
+import modules.sftp.raid.thread_raid0 as thread_raid0
+import modules.sftp.raid.thread_raid1 as thread_raid1
+import modules.sftp.raid.thread_praid as thread_praid
 #-----------------------------
 
 

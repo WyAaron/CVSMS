@@ -9,8 +9,8 @@ import modules.sqlite3.serverDButil as serverDButil
 
 from CVSMS.models import  Files,storageNodeInfo
 
-elif self.RAIDtype == "1":
-    pass
+#elif self.RAIDtype == "1":
+    #pass
     
     
     # #upload to 2 storage nodes

@@ -22,6 +22,7 @@ class SFTPThread(threading.Thread):
             print(self.storageNode["port"])
             upload(self.message, self.storageNode)
             if self.deleteFolder:
+                pass
                 #shutil.rmtree(self.message["cwd"])
         elif self.message["command"] == "download":
             download(self.message, self.storageNode)
@@ -127,3 +128,4 @@ class download(threading.Thread):
                 file = os.path.join(self.message["cwd"],i[0])
                 if os.path.isfile(file):
                     os.remove(file)
+
