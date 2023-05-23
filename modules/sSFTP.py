@@ -38,7 +38,7 @@ import socket
 import os
 import json
 import shutil
-import serverDButil
+import modules.serverDButil as serverDButil
 
 def upload(message,storageNode):
     host = storageNode["IP"]
