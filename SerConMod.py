@@ -74,7 +74,7 @@ def StorageConnection(conn,addr):
             print(repr(e))
             break
 def main(): 
-    IP= "192.168.0.226"
+    IP= "192.168.100.52"
     PORT= 5000
     
     
