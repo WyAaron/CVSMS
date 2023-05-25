@@ -51,6 +51,8 @@ def home_view(request):
         #"file_list": Files.objects.all() ,
         'storageSize': view_tools.get_storageSize(),
         'totalFileSize': view_tools.get_fileTotalSize(),
+        'storageNodes' : storageNodeInfo.objects.all()
+        
     }
     else:
         context = {

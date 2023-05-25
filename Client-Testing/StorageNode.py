@@ -62,6 +62,8 @@ def Heartbeat(client,config):
             try: 
                 client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
                 client.connect((config["serverIP"],config["serverPort"]))
+                client.bind((config["storageIP"],config["storagePort"]))
+                
                 client.sendall(json.dumps(Heart).encode())
             except: 
                 print('did not enter this zone')
@@ -78,7 +80,7 @@ def main():
     with open(os.path.join(os.getcwd(),"Config.json"), 'r', encoding='utf-8-sig') as f:
             config = json.loads(f.read())  
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as client: 
-        # client.bind((config["storageIP"],config["storagePort"]))
+        client.bind((config["storageIP"],config["storagePort"]))
         client.connect((config["serverIP"],config["serverPort"]))
         print(f'Registration status: {config["Registered"]}')
         try:

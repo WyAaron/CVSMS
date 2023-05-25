@@ -15,8 +15,19 @@
 
 
 {% if request.user.is_superuser %}
-<h1>ADMIN PAGE</h1>   
-<h2>Total Storage Size: {{totalFileSize | filesizeformat}}  / {{storageSize | filesizeformat}} </h2>
+
+<h1>ADMIN PAGE</h1>  
+<h3>Node Status</h3>
+{% for storageNode in storageNodes %}
+    <p> {{storageNode.SID}} - 
+        {% if storageNode.status == False %}
+         &#10005
+        {% else %}
+        &#10004
+        {% endif %}
+         </p>
+{% endfor %}
+<h3>Total Storage Size: {{totalFileSize | filesizeformat}}  / {{storageSize | filesizeformat}} </h3>
 <table class="table">
     
     <thead>    
@@ -30,16 +41,18 @@
             <th scope="col" >Storage </th>
 
 
+
         </tr>
     </thead>
     <tbody>
     {% for file in file_list %}
     <tr>
         
-        <th scope="row">{{file.owner}}</th>
+        <th scope="row">{{file.owner}}  </th>
         <td>{{file.fileName}}</td>
         <td> {{file.actualSize | filesizeformat }} </td>
-        <td>  <a class="download-link" href="{% url 'file-retrieve' file.id  %}" > 	<i class="bi bi-cloud-download"   ></i></a>  </td>
+        <td>            
+            <a class="download-link" href="{% url 'file-retrieve' file.id  %}" > 	<i class="bi bi-cloud-download"   ></i></a>  </td>
         <td><a href="{% url 'file-delete' file.id   %}"><i class="bi bi-trash3"></i></a></td>
         
         <!-- For RAID type -->
