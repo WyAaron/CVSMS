@@ -3,7 +3,7 @@
 import os
 import sys
 import multiprocessing,threading
-import SerConMod
+from modules.ServerConnectionModule import SerConMod
 import subprocess
 
 def find_process_id_by_port(port):

@@ -39,6 +39,7 @@
             <th scope="col">Delete </th>
             <th scope="col" >RAID TYPE</th>
             <th scope="col" >Storage </th>
+            <th scope="col" >Cached </th>
 
 
 
@@ -47,7 +48,6 @@
     <tbody>
     {% for file in file_list %}
     <tr>
-        
         <th scope="row">{{file.owner}}  </th>
         <td>{{file.fileName}}</td>
         <td> {{file.actualSize | filesizeformat }} </td>
@@ -64,10 +64,10 @@
         
         {% if file.SID ==  "LOCAL"    %}
         <td><a href="{% url 'file-backToStorageNodes' file.id %}">{{file.SID}}</a></td>
-       
         {% else %}
         <td><a href="{% url 'file-toLocalStorage' file.id %}"> {{file.SID}}</a></td>
         {% endif %}
+
         
         {% empty %}
         <h3>No Files in List</h3>

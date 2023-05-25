@@ -23,6 +23,8 @@ class Files(models.Model):
     start = models.IntegerField(null=True)
     RAIDtype = models.CharField(null=True,choices=RAID_TYPE_CHOICES,default="NONE",max_length=7)
     RAIDid = models.IntegerField(null=True,default=-1)
+    isCached = models.BooleanField(null=True ,default=False)
+
     
 
 class storageNodeStatus(models.Model): 
