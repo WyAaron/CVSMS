@@ -81,13 +81,14 @@ def main(host, port, serverName, password):
         print(message)
         
         if command == "download":
+            
             if not os.path.exists(str(message["FID"])):
                 os.mkdir(str(message["FID"]))
             #USER REQURIES A DOWNLOAD
-            
+                        
             #GET FILE FROM STORAGE ALLOCATION
-            fileMD = storageNodeMD.searchMD([message["FID"]])
-            fileMod.retFile(fileMD, storageLoc)
+            #fileMD = storageNodeMD.searchMD([message["FID"]])
+            #fileMod.retFile(fileMD, storageLoc)
             
             
             ssh = paramiko.SSHClient()
@@ -103,7 +104,7 @@ def main(host, port, serverName, password):
             #SEND UPDATED DB
             conn.sendall(b"ok")
             #os.remove(fName)
-            shutil.rmtree(str(message["FID"]))   
+            #shutil.rmtree(str(message["FID"]))   
             
             
             
@@ -127,11 +128,11 @@ def main(host, port, serverName, password):
             
             #enter DATABASE MODIFICATION
             
-            fileSize = os.path.getsize(os.path.join(str(message["FID"]), message["fName"]))
-            mdList = storageNodeMD.showMD()
-            start = fileMod.getStartLocation(mdList, fileSize, os.path.getsize(storageLoc))
-            newMD = fileMod.storeFile(message["fName"], message["FID"], start, storageLoc)
-            storageNodeMD.addMD(newMD["FID"], newMD["fileName"], newMD["fileSize"], newMD["start"])
+            # fileSize = os.path.getsize(os.path.join(str(message["FID"]), message["fName"]))
+            # mdList = storageNodeMD.showMD()
+            # start = fileMod.getStartLocation(mdList, fileSize, os.path.getsize(storageLoc))
+            # newMD = fileMod.storeFile(message["fName"], message["FID"], start, storageLoc)
+            # storageNodeMD.addMD(newMD["FID"], newMD["fileName"], newMD["fileSize"], newMD["start"])
             
             #LOOK FOR THE SMALLEST AVAILABLE LOCATION THAT CAN FIT THE FILE
             
@@ -139,17 +140,17 @@ def main(host, port, serverName, password):
             mdList = storageNodeMD.showMD()
             maxSize = fileMod.getMaxFile(mdList, os.path.getsize(storageLoc))
             
-            messageOut = {
-                "start": start,
-                "maxSize": maxSize
+            messageUp = {
+                "start": 1,#start,
+                "maxSize": 10000000#maxSize
             }
-            print(f"out: {messageOut}")
-            messageOut = json.dumps(messageOut).encode()
-            print(messageOut)
-            conn.sendall(messageOut)
+            print(f"out: {messageUp}")
+            messageUp = json.dumps(messageUp).encode()
+            print(messageUp)
+            conn.sendall(messageUp)
             
             #create Lock release
-            shutil.rmtree(str(message["FID"]))   
+            #shutil.rmtree(str(message["FID"]))   
             
             
         elif command == "delete":
@@ -166,12 +167,12 @@ def main(host, port, serverName, password):
             
             messageOut = bytes(json.dumps(messageOut), 'utf-8')
             
-            conn.sendall(messageOut)
+            conn.sendall("messageOut")
         
 if __name__ == "__main__":
-    host = "192.168.0.225"
+    host = "192.168.0.146"
     port = 5004
-    serverName = "ssh"
+    serverName = "thesis-ssh"
     password = "password"
     while True:
         try:
