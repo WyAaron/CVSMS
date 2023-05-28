@@ -168,29 +168,32 @@ storageNodeUploadList = [
                     "storageIp":"192.168.0.213",
                     "storagePort":5004,
                     "online":True
-                }
-                # {        
-                #     "SID":"Storage-2",
-                #     "allocSize":1*GB,
-                #     "MaxSize": 1*GB,
-                #     "storageIp":"192.168.0.146",
-                #     "storagePort":5004,
-                #     "online":False
-                # },
+                },
+                {        
+                    "SID":"Storage-2",
+                    "allocSize":1*GB,
+                    "MaxSize": 1*GB,
+                    "storageIp":"192.168.0.213",
+                    "storagePort":5003,
+                    "online":False
+                },
             ]   
+
+
+def delete(IP): 
+    conn = sqlite3.connect("db.sqlite3")
+    c = conn.cursor()
+    c.execute("DELETE FROM CVSMS_storageNodeInfo WHERE IP = ?", (IP,))
+    conn.commit()
+    conn.close()
+delete("192.168.0.213")
 
 ##### UNCOMMENT TO ADD STORAGE NODES
 for i in storageNodeUploadList:
     storageRegister(i)
 
 
-# def delete(IP): 
-#     conn = sqlite3.connect("db.sqlite3")
-#     c = conn.cursor()
-#     c.execute("DELETE FROM CVSMS_storageNodeInfo WHERE IP = ?", (IP,))
-#     conn.commit()
-#     conn.close()
-# delete("192.168.0.146")
+
 
 #ADD SUPERUSER USERNAME:renji PW:renji
-add_superUser()
+#add_superUser()

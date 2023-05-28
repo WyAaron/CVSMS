@@ -7,7 +7,7 @@ import modules.sqlite3.serverDButil as serverDButil
 import time
 
 
-def upload(message,storageNode):
+def put(message,storageNode):
     host = storageNode["IP"]
     port = storageNode["port"]
     
@@ -46,7 +46,7 @@ def upload(message,storageNode):
             
             #os.remove(os.path.join(message["cwd"],fName))
 
-def download(message,storageNode):
+def get(message,storageNode):
     host = storageNode["IP"]
     port = storageNode["port"]
     

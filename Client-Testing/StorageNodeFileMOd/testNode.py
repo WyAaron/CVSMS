@@ -47,8 +47,8 @@ MB = 2 ** 20
 GB = 2 ** 30
 
 
-fileMod.CreateAlloc(1*GB,"storage")
-storageNodeMD.createMD()
+# fileMod.CreateAlloc(1*GB,"storage")
+# storageNodeMD.createMD()
 
 
 def main(host, port, serverName, password):

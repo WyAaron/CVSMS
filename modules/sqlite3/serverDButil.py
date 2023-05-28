@@ -31,7 +31,7 @@ def searchMD(id):
 	conn = sqlite3.connect('db.sqlite3')
 	c = conn.cursor()
 
-	c.execute("SELECT * FROM CVSMS_files WHERE FID = (?)", id)
+	c.execute("SELECT * FROM CVSMS_files WHERE FID = (?)", (id,))
 	columnName = [description[0] for description in c.description]
 	items = c.fetchall()
 
@@ -133,7 +133,7 @@ def getAllStorageNodes():
 def getStorageNode(SID):
 	conn = sqlite3.connect('db.sqlite3')
 	c = conn.cursor()
-	c.execute("SELECT * FROM CVSMS_storagenodeinfo WHERE SID = (?)", SID)
+	c.execute("SELECT * FROM CVSMS_storagenodeinfo WHERE SID = (?)", (SID,))
 	items = c.fetchall()
  
 	columnName = [description[0] for description in c.description]
@@ -149,4 +149,34 @@ def getStorageNode(SID):
   
 	conn.commit()
 	conn.close()
-	return keyValue[0]
+	if keyValue:
+		return keyValue[0]
+	else:
+		return None
+
+
+
+def get_all_files_by_sid(SID):
+	conn = sqlite3.connect('db.sqlite3')
+	c = conn.cursor()
+	c.execute("SELECT * FROM CVSMS_files WHERE SID = (?)", (SID,))
+	items = c.fetchall()
+
+	columnName = [description[0] for description in c.description]
+
+	keyValue = []
+
+	for item in items:
+		data = {}
+
+		for i in range(len(columnName)):
+			data[columnName[i]] = item[i]
+		keyValue.append(data)
+
+	conn.commit()
+	conn.close()
+ 
+	if keyValue:
+		return keyValue[0]
+	else:
+		return None
