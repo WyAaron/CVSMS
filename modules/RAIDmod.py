@@ -103,9 +103,25 @@ class raid0:
         #CLOSE ALL THE FILES
         for i in fileList:
             i.close()  
+            
+            
+def xor_chunks(chunk1, chunk2):
+    
+        if len(chunk1) > len(chunk2):
+            chunk2 += bytes(len(chunk1) - len(chunk2))
+        else:
+            chunk1 += bytes(len(chunk2) - len(chunk1))
+        # Convert bytes to numpy arrays
+        arr1 = np.frombuffer(chunk1, dtype=np.uint8)
+        arr2 = np.frombuffer(chunk2, dtype=np.uint8)
 
+        # XOR the arrays
+        result = np.bitwise_xor(arr1, arr2)
+            
+        return bytes(result)
+    
 class pRAID:
-    def splitFile(self, fName, storageLocation):
+    def split(fName, storageLocation):
         #list for 
         fileList = [] # a list to keep track of the opened part files
         partNames = [] # a list for the names of the file parts
@@ -143,7 +159,7 @@ class pRAID:
                 if ctr == numOfFiles:
                     
                     #PERFORM XOR OPERATION
-                    parityData = self.xor_chunks(parityChunks[0], parityChunks[1])
+                    parityData = xor_chunks(parityChunks[0], parityChunks[1])
 
                     #STORE TO FILE
                     parityFile.write(parityData)
@@ -164,26 +180,8 @@ class pRAID:
         #RETURN THE LIST OF FILES THAT WERE SPLIT
         return partNames
 
-    def split(self, fName, storageLocation):
-        fileList = self.splitFile(fName, storageLocation)
-        return fileList
-
-    def xor_chunks(self, chunk1, chunk2):
     
-        if len(chunk1) > len(chunk2):
-            chunk2 += bytes(len(chunk1) - len(chunk2))
-        else:
-            chunk1 += bytes(len(chunk2) - len(chunk1))
-        # Convert bytes to numpy arrays
-        arr1 = np.frombuffer(chunk1, dtype=np.uint8)
-        arr2 = np.frombuffer(chunk2, dtype=np.uint8)
-
-        # XOR the arrays
-        result = np.bitwise_xor(arr1, arr2)
-            
-        return bytes(result)
-    
-    def repair(self,fName,partNum1,partNum2, storageLocation):
+    def repair(fName,partNum1,partNum2, storageLocation):
         
         validPart = open(os.path.join(storageLocation,f"{fName}-{partNum1}"), "rb")
         parity = open (os.path.join(storageLocation,f"{fName}-{partNum2}"), "rb")
@@ -203,7 +201,7 @@ class pRAID:
                 parityData= parity.read(25*MB)
                 
                 #PERFORM AN XOR OPERATION TO RECOVER THE LOST DATA
-                parityChunk = self.xor_chunks(validData, parityData)
+                parityChunk = xor_chunks(validData, parityData)
                     
                 #WRITE THE RECOVERED DATA ON THE RECOVERING FILE
                 repairedFile.write(parityChunk)
@@ -217,7 +215,7 @@ class pRAID:
         validPart.close()
         parity.close()
         
-    def merge(self, fName, partList,storageLocation):
+    def merge(fName, partList,storageLocation):
         fileList = [] # a list to keep track of the opened part files
         ctr = 0 #COUNTER TO KEEP TRACK OF WHICH FILE IS THE NEXT TO ACCESS
         

@@ -3,6 +3,9 @@ import time
 import os
 import shutil
 import modules.sftp.sftp_tools as sftp_tools 
+import modules.nodeTools.getTools as NodeGetTools
+import modules.RAIDmod as raid_module
+
 
 class SFTPThread(threading.Thread):
     def __init__(self, message, storageNode, deleteFolder = False):
@@ -131,23 +134,38 @@ class standard_get(threading.Thread):
         #         if os.path.isfile(file):
         #             os.remove(file)
 
-class raidThread(threading.Thread):
-    def __init__(self, obj, RAIDtype):
-        # execute the base constructor
-        threading.Thread.__init__(self)
-        self.obj = obj
-        self.RAIDtype = RAIDtype
-    
-    # override the run function
     def run(self):
+        cwd = os.path.dirname(self.obj.file.path)
+        fName = self.obj.fName
         
         message = {
-            "fName": self.obj.fName,
-            "FID" : self.message["FID"],
-            "cwd" : self.message["cwd"],
+            "fName": fName,
+            "FID" : self.obj.FID,
+            "cwd" : cwd,
             "command":"download"
         }
         
+        storageNode = NodeGetTools.getCurrentFileStorageNodes(self.obj.FID)[0]
+        #CHECK IF FILE EXISTS
+        if os.path.isfile(os.path.join(cwd,fName)): #condition for file DNE in server
+            print(f'file exists proceeding to RAID.')
+            
+        #CHECK IF DIRECTORY EXISTS
+        else:
+            if not os.path.exists(cwd):
+                os.mkdir(cwd)
+            else:
+                print("Directory Exists, Proceeding to SFTP")
+            # sftp_get = SFTPThread(message, storageNode)
+            # sftp_get.start()
         
-        SFTPThread(message, self.storageNode)
-        pass
+        if self.RAIDtype == "0":
+            #raid_module.raid0.split(fName, 2, cwd)
+            #raid_module.raid0.merge(fName, ["hello.txt-0","hello.txt-1"], cwd)
+            print("RAID 0")
+        elif self.RAIDtype == "1":
+            print("RAID 1")
+        elif self.RAIDtype == "PARITY":
+            #RAIDmod.pRAID.split(fName, cwd)
+            raid_module.pRAID.merge(fName, ["hello.txt-0","hello.txt-1"], cwd)
+            print("PARITY")

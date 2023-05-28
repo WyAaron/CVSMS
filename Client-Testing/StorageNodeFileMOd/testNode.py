@@ -60,7 +60,7 @@ def main(host, port, serverName, password):
     
     
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-        
+        s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         #accept connection from server for an upload request
         s.bind((host, port))
         s.listen(1)
@@ -170,7 +170,7 @@ def main(host, port, serverName, password):
             conn.sendall("messageOut")
         
 if __name__ == "__main__":
-    host = "192.168.0.146"
+    host = "192.168.0.213"
     port = 5004
     serverName = "thesis-ssh"
     password = "password"
