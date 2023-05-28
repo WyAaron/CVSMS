@@ -170,10 +170,10 @@ def main(host, port, serverName, password):
             conn.sendall("messageOut")
         
 if __name__ == "__main__":
-    host = "192.168.0.213"
+    host = "192.168.100.69"
     port = 5004
-    serverName = "thesis-ssh"
-    password = "password"
+    serverName = "aaron"
+    password = "aaron"
     while True:
         try:
             main(host, port, serverName, password)

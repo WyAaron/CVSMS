@@ -67,7 +67,12 @@
         {% else %}
         <td><a href="{% url 'file-toLocalStorage' file.id %}"> {{file.SID}}</a></td>
         {% endif %}
-
+        
+        {% if file.isCached ==  True    %}
+        <td>Yes</td>
+        {% else %}
+        <td>No</td>
+        {% endif %}
         
         {% empty %}
         <h3>No Files in List</h3>

@@ -44,6 +44,7 @@ import modules.sftp.raid.raid0_tools as raid0_tools
 # Home view of user
 @login_required
 def home_view(request): 
+    # view_tools.get_AvailabilityInCache()
     user = request.user 
     if user.is_superuser: 
         context = {
