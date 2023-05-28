@@ -7,9 +7,11 @@ import shutil
 import modules.sftp.sftp_tools as sftp_tools 
 import modules.sqlite3.serverDButil as serverDButil
 import modules.RAIDmod as raid_module
-import modules.sftp.raid.raid0_tools as raid0_tools
+import modules.nodeTools.getTools as NodeGetTools
 import modules.sftp.sftp_tools as sftp_tools
 
+
+from CVSMS.models import  Files
 
 class SFTPThread(threading.Thread):
     def __init__(self, message, storageNode, deleteFolder = False):
@@ -64,7 +66,7 @@ class standard_get(threading.Thread):
         get_Thread.start()
     
     
-class raidThread(threading.Thread):
+class raidPut(threading.Thread):
     def __init__(self, obj, RAIDtype):
         # execute the base constructor
         threading.Thread.__init__(self)
@@ -82,25 +84,13 @@ class raidThread(threading.Thread):
             "command":"download"
         }
         
-       
-        
-
-        #CHECK IF FILE EXISTS
-        if not os.path.isfile(os.path.join(cwd,fName)): #condition for file DNE in server
-            print(f'file is not in cache downloading...')
-            if not os.path.exists(cwd):
-                os.mkdir(cwd)
-            else:
-                print("Directory Exists, Proceeding to SFTP")
-            # sftp_get = SFTPThread(message, storageNode)
-            # sftp_get.start()
-            # sftp_get.join()
+    
             
         if self.RAIDtype == "0":
             partNames = raid_module.raid0.split(fName, 2, cwd)
             #raid_module.raid0.merge(fName, ["hello.txt-0","hello.txt-1"], cwd)
             
-            upload_list = raid0_tools.get_storage_nodes(partNames, message["cwd"])
+            upload_list = NodeGetTools.get_storage_nodes(partNames, cwd)
             print("RAID 0")
             if not upload_list:
                 print("NOT ENOUGH STORAGE")
@@ -135,6 +125,22 @@ class raidThread(threading.Thread):
                 
         except Exception as e:
             print("ERROR IN SFTP UPLOAD")
+            
+            
+        print("HELLO I WAS SUCCESSFUL")
+        serverDButil.removeSID(self.obj.FID)
+        serverDButil.setRAIDtype(self.RAIDtype, self.obj.FID)
+        ctr = 0
+        for i in upload_list:
+            ctr+=1
+            Files.objects.create(
+                owner=self.obj.owner, 
+                fName= i["fName"],
+                file=self.obj.file,
+                actualSize=os.path.getsize(os.path.join(cwd, i["fName"])),
+                SID = i["storage_info"]["SID"],
+                RAIDtype = self.RAIDtype,
+                RAIDid = ctr,
+                FID=self.obj.FID)
 
         
-        print("HELLO I WAS SUCCESSFUL")

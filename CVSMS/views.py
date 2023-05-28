@@ -32,7 +32,7 @@ import modules.sftp.sftp_tools as sftp_tools
 
 #MODULES FOR RAIDING FILES AND INITIATING ITS SFTP
 import modules.sftp.thread_sftp as thread_sftp
-# import modules.sftp.raid.thread_raid0 as thread_raid0
+import modules.sftp.raid.raid0_tools as raid0_tools
 # import modules.sftp.raid.thread_raid1 as thread_raid1
 # import modules.sftp.raid.thread_praid as thread_praid
 #-----------------------------
@@ -125,11 +125,15 @@ def file_Upload_view(request):
             fName = os.listdir(cwd)[0]
 
 
-            storageNodeList = serverDButil.getAllStorageNodes()
-            storageNode = NodeGetTools.getStorageNodes([fName], storageNodeList, cwd)[0]["storageNode"]
-            serverDButil.addStorageNode(storageNode["SID"],obj.FID)
+        
+            storageNode = NodeGetTools.get_storage_nodes([fName], cwd)
+            
+            
             
             if storageNode:
+                
+                storageNode = storageNode[0]["storage_info"]
+                serverDButil.addStorageNode(storageNode["SID"],obj.FID)
                 message = {
                 "fName": fName,
                 "FID" : obj.FID,
@@ -147,7 +151,7 @@ def file_Upload_view(request):
                     #Todo Function when false it must delete file from db 
                     print(e)
             else:
-                serverDButil.delMD([FID])
+                serverDButil.delMD(FID)
                 messages.info(request,"There is no more space")
             
             #CREATE DB ENTRY FOR FILE SAVED
@@ -173,18 +177,18 @@ def file_Retreive_view(request,id):
     url = obj.file.url
     
     
-    fName = os.path.split(url)[-1]
+    fName = serverDButil.getFileMD(obj.FID)[0]["fName"]
     
     if not os.path.exists(cwd):
         os.mkdir(cwd)
     else:
         print("Directory Exists, Proceeding to SFTP")
     #TODO CONNECTED STORAGE NODES
-    storageNodeList = NodeGetTools.getCurrentFileStorageNodes(obj.FID)
-    fileList = serverDButil.searchMD([obj.FID])
+    
+    #fileList = serverDButil.searchMD([obj.FID])
 
     
-    fileTuple = []
+    #fileTuple = []
     
     # if fileList[0]["RAIDtype"] != "NONE":
     #     for i in range(1,len(fileList)):
@@ -196,25 +200,32 @@ def file_Retreive_view(request,id):
         
 
     
-    #GET DATA FROM DB
-    message = {
-        "FID" : obj.FID,
-        "cwd" : cwd,
-        "command":"download",
-        "RAIDtype": obj.RAIDtype
-        }
+    
     context = {
         'button': False
     }
 
-    
 
     if not os.path.isfile(os.path.join(cwd,fName)): #condition for file DNE in server
         messages.info(request,f'file started downloading from storage node.')
         # create the thread
-        thread = thread_sftp.standard_get(message, fName, storageNodeList[0])
-        # start the thread
-        thread.start()
+        if obj.RAIDtype == -1:
+            #GET DATA FROM DB
+            fileMD = serverDButil.getFileMD(obj.FID)[0]
+            storageNode = serverDButil.getStorageNode(fileMD["SID"])
+            message = {
+                "FID" : obj.FID,
+                "cwd" : cwd,
+                "command":"download",
+                "RAIDtype": obj.RAIDtype
+                }
+            thread = thread_sftp.standard_get(message, fName, storageNode)
+            # start the thread
+            thread.start()
+        else:
+            print("DOWNLOADING RAIDED FILES")
+            raid_get_thread = raid0_tools.thread_get(obj)
+            raid_get_thread.start()
         return redirect('/')
         
         # t1.start()
@@ -225,9 +236,11 @@ def file_Retreive_view(request,id):
         if os.path.getsize(os.path.join(cwd,fName)) == obj.actualSize: #File complete download from storage node
             if request.method == "GET": 
                 file_download = get_object_or_404(Files, pk = id )
-                response = HttpResponse(file_download.file, content_type='multipart/form-data')
-                response['Content-Disposition'] =f'attactments; fName="{file_download.fName}"' 
-                return response
+                #path = os.path.join(obj.FID, fName)
+                print(type(file_download.file))
+                # response = HttpResponse(file_download.file, content_type='multipart/form-data')
+                # response['Content-Disposition'] =f'attactments; fName="{file_download.fName}"' 
+                # return response
         else: # file is downloading from storage node
             messages.info(request,f'file is downloading')
     
@@ -260,9 +273,9 @@ def file_RAID_view(request,id):
         
         
         if form.is_valid():
-            t1 = thread_sftp.raidThread(obj,RAIDtype)
+            t1 = thread_sftp.raidPut(obj,RAIDtype)
             t1.start()
-
+        
 
             return redirect('/')
         else: 
@@ -275,30 +288,11 @@ def file_RAID_view(request,id):
 def file_Delete_view(request, id): 
     file = Files.objects.get(id=id)
     if request.method == "POST":
-        storageNodeList = NodeGetTools.getCurrentFileStorageNodes(file.FID)
-        
-        
-        message = {
-            # "fName": fName,
-            "FID" : file.FID,
-        } 
-        t1 = thread_sftp.SFTPThread(message, )   
-        # delete.start() 
-        {   
-        "FID" : file.FID,
-        "command" : "delete"
-        }
-        
-        for i in storageNodeList:
-            if i != None:
-                t1 = thread_sftp.SFTPThread(message, i)   
-                t1.start()    
-
-        return redirect('/')
-        # return redirect(success_url
+        serverDButil.delMD(file.FID)
     context = {
         "file":file
-    }
+    }  
+    
     return render(request,'file-Delete.html',context)
 
 #TODO: 

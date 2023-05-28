@@ -59,16 +59,7 @@ def updateRaidType(RAIDtype, id):
 	conn.close()
 
 
-########## Edit entry - storage Node ##########
-def removeStorageNodeFromFileMD(id):
-	conn = sqlite3.connect('db.sqlite3')
-	c = conn.cursor()
 
-	c.execute("UPDATE CVSMS_files SET SID = ? WHERE FID = ?", ("NONE", id))
-	print("\nEntry updated successfully\n")
-
-	conn.commit()
-	conn.close()
 
 
 
@@ -180,3 +171,46 @@ def get_all_files_by_sid(SID):
 		return keyValue[0]
 	else:
 		return None
+
+def getFileMD(FID):
+	conn = sqlite3.connect('db.sqlite3')
+	c = conn.cursor()
+	c.execute("SELECT * FROM CVSMS_files WHERE FID = (?)", (FID,))
+	items = c.fetchall()
+ 
+	columnName = [description[0] for description in c.description]
+
+	keyValue = []
+
+	for item in items:
+		data = {}
+
+		for i in range(len(columnName)):
+			data[columnName[i]] = item[i]
+		keyValue.append(data)
+  
+	conn.commit()
+	conn.close()
+	return keyValue
+
+########## Edit entry - storage Node ##########
+def removeSID(id):
+	conn = sqlite3.connect('db.sqlite3')
+	c = conn.cursor()
+
+	c.execute("UPDATE CVSMS_files SET SID = ? WHERE FID = ?", ("NONE", id))
+	print("\nEntry updated successfully\n")
+
+	conn.commit()
+	conn.close()
+ 
+ 
+def setRAIDtype(RAIDtype, id):
+	conn = sqlite3.connect('db.sqlite3')
+	c = conn.cursor()
+
+	c.execute("UPDATE CVSMS_files SET RAIDtype = ? WHERE FID = ?", (RAIDtype, id))
+	print("\nEntry updated successfully\n")
+
+	conn.commit()
+	conn.close()

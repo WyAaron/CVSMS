@@ -8,140 +8,70 @@ import modules.sftp.sftp_tools as sftp_tools
 import modules.nodeTools.getTools as NodeGetTools
 import modules.RAIDmod as raid_module
 import modules.sqlite3.serverDButil as serverDButil
+import modules.nodeTools.getTools as NodeGetTools
+import modules.RAIDmod as raid_module
+
+
 
 from CVSMS.models import  Files,storageNodeInfo
 
 
-def get_start_of_file(fileSize):
-    pass
-
-def filter_node_list():
-    pass
-
-
-
-#-----------------Fragmented Check-----------------------
-def fragmentCheck(mdList, storSize):
-    #sort json list based on start point to sort the files
-    jsonList = sorted(mdList, key=lambda k: k["start"])
-    
-    prev_end = 0
-    spaceBetweenFiles  = []
-    
-    for file in jsonList:
-        # Calculate the end byte of the current file
-        endByte = file["start"] + file["fileSize"]
-        
-        #calculate if there is a gap between the previous file and the current file
-        if file["start"] != 0:
-            space_start = prev_end
-            space_end = file["start"]
-            
-            #if there is a gap append the gap to the list of gaps
-            if (space_end - space_start) != 0:
-                spaceBetweenFiles.append((space_start,space_end))
-        
-        prev_end = endByte
-    
-    #get the size between the last file and the storage location
-    space_start = prev_end
-    space_end = storSize
-    spaceBetweenFiles.append((space_start,space_end))
-    
-    return spaceBetweenFiles
-
-
-
-
-def get_storage_nodes(partNames,cwd):
-    
-    allNodes = serverDButil.getAllStorageNodes()
-    file_and_node_tuple_list = []
-    # file_and_node_tuple_list = []
-    # for partName in partNames:
-
-    #     file_size = os.path.getsize(os.path.join(cwd, partName))
-        
-    #     storage_node = None
-        
-    #     for storage_node in allNodes:
-            
-    #         #SKIP THE NODE IF THE NODE IS OFFLINE OR IF THE NODE HAS A SMALLER MAXIMUM SIZE THAT CAN BE STORED
-    #         if storage_node["status"] == False:
-    #             continue
-    #         elif storage_node["maxSize"] < file_size:
-    #             continue
-            
-    #         files_in_node = serverDButil.get_all_files_by_sid(storage_node["SID"])
-    #         node_allocated_size = serverDButil.get_all_files_by_sid(storage_node["allocSize"])
-    #         gap_list = fragmentCheck(files_in_node, node_allocated_size)
-            
-            
-    #         #FIND THE SMALLES SPACE IN THE NODE
-    #         newSmallestSpace = None
-    #         for space in gap_list:
-    #             if space[1]-space[0] >= file_size:
-    #                 #CHECK IF THE NEW FOUND SPACE IS SMALLER THAN THE PREVIOUS SPACE
-    #                 if newSmallestSpace is None or space[1]-space[0] < smallestSpaceBetween:
-    #                     newSmallestSpace = space
-    #                     smallestSpaceBetween = space[1]-space[0]
-            
-    #         #CHECK IF NEW FOUND SPACE IN THE NEW NODE IS SMALLER THAN PREVIOUSLY FOUND SPACE            
-    #         if smallestSpaceBetween is None or (newSmallestSpace[1] - newSmallestSpace[0]) < (storage_node["Gap"][0] - storage_node["Gap"][1]):  
-    #             storage_node = ({"storageNode": storage_node , "Gap": newSmallestSpace})
-        
-    #     #IF THERE WAS NO NODE FOUND END FUNCTION AND RETURN NONE
-    #     if storage_node == None:
-    #         return None
-        
-    #     file_and_node_tuple_list.append({"fName":partName, 
-    #                                      "storage_info":storage_node})
-
-    #     #REMOVE SELECTED NODE FROM THE LIST OF POSSIBLE NODES
-    #     allNodes = [item for item in allNodes if item["SID"] != storage_node["SID"]]
 
     
-    # return file_and_node_tuple_list
-            
-    file_and_node_tuple_list = []
-    for partName in partNames:
-        file_size = os.path.getsize(os.path.join(cwd, partName))
-        
-        storageNode = None
-        
-        for node in allNodes:
+    
+class thread_get(threading.Thread):
+    def __init__(self, obj):
+        # execute the base constructor
+        threading.Thread.__init__(self)
+        self.obj = obj
 
-            if node["maxSize"] < file_size:
-                continue
-            elif node["status"] == False:
-                continue
-            
-            if node["maxSize"] >= file_size:
+    def run(self):
+        file_list = serverDButil.getFileMD(self.obj.FID)
+        
+        
+        for fileMD in file_list:
+            # print(fileMD["RAIDid"])
+            if fileMD["RAIDid"] != -1:
+                storageNode = serverDButil.getStorageNode(fileMD["SID"])
                 
-                storageNode = node
-      
+                cwd = os.path.dirname(self.obj.file.path)
+                
+                message = {
+                "fName": fileMD["fName"],
+                "FID" : fileMD["FID"],
+                "command" : "download",
+                "cwd" : cwd
+                }
+                
+                
+                #CHECK IF FILE EXISTS
+
+                if not os.path.isfile(os.path.join(cwd, fileMD["fName"])): #condition for file DNE in server
+                    print(f'file is not in cache downloading...')
+                    if not os.path.exists(cwd):
+                        os.mkdir(cwd)
+                    else:
+                        print("Directory Exists, Proceeding to SFTP")
+                
+                    #GET THE FILES
+                    sftp_tools.get(message, storageNode)
+            else:
+                print("SKIPPED 1st ENTRY")
+                
+                
+        sorted_file_list = sorted(file_list, key=lambda item: item["RAIDid"])
+        if self.obj.RAIDtype == "0":
+            fileList = [sorted_file_list[1]["fName"], sorted_file_list[2]["fName"]]
             
-        if storageNode == None:
-            return None
-            
-        allNodes = [item for item in allNodes if item["SID"] != storageNode["SID"]]
-        file_and_node_tuple_list.append({"fName":partName, 
-                                          "storage_info":storageNode})
+            raid_module.raid0.merge(sorted_file_list[0]["fName"], fileList, cwd)
+            pass
         
-    return file_and_node_tuple_list
-    
-
-            
-
-
-
-def put(partNames, cwd):
-    
-    
-    return get_storage_nodes(partNames, cwd)
-    
-
-    
-    
-    
-  
+        elif self.obj.RAIDtype == "1":
+            pass
+        
+        elif self.obj.RAIDtype == "PARITY":
+            pass
+        
+        
+        
+        pass

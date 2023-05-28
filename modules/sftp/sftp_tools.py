@@ -39,9 +39,9 @@ def put(message,storageNode):
         data = data.decode()
         #DELETE FILE AFTER STORAGE NODE FINISH DOWNLOADING
         if data:
-            data = json.loads(data)
-            serverDButil.updateMaxSize(data["maxSize"], storageNode["SID"])
-            serverDButil.updateFileStartMD(data["start"], fID)
+            # data = json.loads(data)
+            # serverDButil.updateMaxSize(data["maxSize"], storageNode["SID"])
+            # serverDButil.updateFileStartMD(data["start"], fID)
             print("Storage Node successful download")
             
             #os.remove(os.path.join(message["cwd"],fName))
