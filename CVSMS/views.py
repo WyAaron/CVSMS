@@ -120,7 +120,7 @@ def file_Upload_view(request):
             fName= request.FILES["file"],
             file=request.FILES['file'],
             actualSize=request.FILES["file"].size,
-            FID=FID)
+            FID=FID,isCached=False)
                         
             cwd = os.path.dirname(obj.file.path)
             fName = os.listdir(cwd)[0]
@@ -290,6 +290,7 @@ def file_Delete_view(request, id):
     file = Files.objects.get(id=id)
     if request.method == "POST":
         serverDButil.delMD(file.FID)
+        return redirect('/')
     context = {
         "file":file
     }  

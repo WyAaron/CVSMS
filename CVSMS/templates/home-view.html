@@ -17,7 +17,7 @@
 {% if request.user.is_superuser %}
 
 <h1>ADMIN PAGE</h1>  
-<h3>Node Status</h3>
+<h5>Node Status</h5>
 {% for storageNode in storageNodes %}
     <p> {{storageNode.SID}} - 
         {% if storageNode.status == False %}
@@ -27,7 +27,7 @@
         {% endif %}
          </p>
 {% endfor %}
-<h3>Total Storage Size: {{totalFileSize | filesizeformat}}  / {{storageSize | filesizeformat}} </h3>
+<h5>Total Storage Size: {{totalFileSize | filesizeformat}}  / {{storageSize | filesizeformat}} </h5>
 <table class="table">
     
     <thead>    
