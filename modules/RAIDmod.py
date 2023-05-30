@@ -181,7 +181,9 @@ class pRAID:
         return partNames
 
     
-    def repair(fName,partNum1,partNum2, storageLocation):
+    def repair(fName, fileList, storageLocation):
+        
+        
         
         validPart = open(os.path.join(storageLocation,f"{fName}-{partNum1}"), "rb")
         parity = open (os.path.join(storageLocation,f"{fName}-{partNum2}"), "rb")
