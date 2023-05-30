@@ -12,5 +12,6 @@
   
  
 <h1> Client </h1>
-1. Ensure that the config.json details are correctly tied to the machines Ip address 
+1. Ensure that the config.json details are correctly tied to the machines Ip address. 
 2. Run the config file
+3.

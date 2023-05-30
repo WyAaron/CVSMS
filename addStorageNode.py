@@ -175,7 +175,15 @@ storageNodeUploadList = [
                     "MaxSize": 1*GB,
                     "storageIp":"192.168.0.213",
                     "storagePort":5003,
-                    "online":False
+                    "online":True
+                },
+                {        
+                    "SID":"Storage-3",
+                    "allocSize":1*GB,
+                    "MaxSize": 1*GB,
+                    "storageIp":"192.168.0.213",
+                    "storagePort":5002,
+                    "online":True
                 },
             ]   
 

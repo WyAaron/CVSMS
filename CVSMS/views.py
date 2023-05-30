@@ -35,7 +35,7 @@ import modules.sftp.sftp_tools as sftp_tools
 import modules.sftp.thread_sftp as thread_sftp
 import modules.sftp.raid.raid0_tools as raid0_tools
 import modules.sftp.raid.raid1_tools as raid1_tools
-# import modules.sftp.raid.thread_praid as thread_praid
+import modules.sftp.raid.parity_tools as parity_tools
 #-----------------------------
 
 
@@ -227,7 +227,9 @@ def file_Retreive_view(request,id):
                 raid_get_thread.start()
             
             else:
-                print("RAID PARITY: WIP")
+                raid_get_thread = parity_tools.thread_get(obj)
+                raid_get_thread.start()
+                
         return redirect('/')
         
         # t1.start()

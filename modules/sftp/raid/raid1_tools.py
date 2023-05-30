@@ -33,7 +33,7 @@ class thread_get(threading.Thread):
             # print(fileMD["RAIDid"])
             if fileMD["RAIDid"] != -1:
                 
-               
+                #Added temp variable to verify if atleast one storage node is alive
                 temp = serverDButil.getStorageNode(fileMD["SID"])
                 
                 if temp:
@@ -47,6 +47,7 @@ class thread_get(threading.Thread):
         
         if not storageNode:
             print("NO NODES ARE ALIVE")
+            shutil.rmtree(cwd)
         else:
             message = {
             "fName": fileMD["fName"],

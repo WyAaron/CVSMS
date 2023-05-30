@@ -125,14 +125,12 @@ def get_storage_nodes(partNames,cwd):
         storageNode = None
         
         for node in allNodes:
-            print(node)
-            if node["maxSize"] < file_size:
-                continue
-            elif node["status"] == False:
-                continue
             
+            if node["status"] == False:
+                continue
+            elif node["maxSize"] < file_size:
+                continue
             if node["maxSize"] >= file_size:
-                
                 storageNode = node
       
             

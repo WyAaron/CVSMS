@@ -135,7 +135,7 @@ class raidPut(threading.Thread):
                 print("RAID 1")
             elif self.RAIDtype == "PARITY":
                 
-                #raid_module.pRAID.split(fName, cwd)
+                partNames = raid_module.pRAID.split(fName, cwd)
                 #raid_module.pRAID.merge(fName, ["hello.txt-0","hello.txt-1"], cwd)
                 print("PARITY")
             
