@@ -171,46 +171,48 @@ class thread_unraid(threading.Thread):
                 
                 storageNode = NodeGetTools.get_storage_nodes([fName], cwd)
             
-            if storageNode:
-                
-                message = {
-                    "fName": fName,
-                    "FID" : fileMD["FID"],
-                    "command" : "upload",
-                    "cwd" : cwd,
-                    #"start" : storageNode[0]["Gap"][0],
-                    "start" : 0,
-                    "command":"upload"
-                }
-                
-            
-                success = True
-                try: 
-                    storageNode = storageNode[0]["storage_info"]
-                    sftp_tools.put(message, storageNode)
+                if storageNode:
                     
-                except Exception as e:
-                    print(e)
-                    success = False
-                
-                if not success:
-                    print("SFTP of merged file failed")
+                    message = {
+                        "fName": fName,
+                        "FID" : self.obj.FID,
+                        "cwd" : cwd,
+                        #"start" : storageNode[0]["Gap"][0],
+                        "start" : 0,
+                        "command":"upload"
+                    }
                     
-                else:
-                    
-                    print("SFTP upload of merged file success")
-                    serverDButil.delMD(self.obj.FID)
-                    Files.objects.create(
-                    owner = self.obj.owner, 
-                    fName = self.obj.fName,
-                    file = self.obj.file,
-                    actualSize = self.obj.actualSize,
-                    FID = self.obj.FID,
-                    #start = storageNode[0]["Gap"][0],
-                    start = 0,
-                    isCached = False,
-                    SID = storageNode["SID"])
                 
-                shutil.rmtree(cwd)
+                    success = True
+                    try: 
+                        storageNode = storageNode[0]["storage_info"]
+                        sftp_tools.put(message, storageNode)
+                        
+                    except Exception as e:
+                        print(e)
+                        success = False
+                    
+                    if not success:
+                        print("SFTP of merged file failed")
+                        
+                    else:
+                        
+                        print("SFTP upload of merged file success")
+                        #REMOVE OLD DATA OF FILE FROM DB
+                        serverDButil.delMD(self.obj.FID)
+                        
+                        #ADD THE NEW UNRAIDED DATA TO DB
+                        Files.objects.create(
+                        owner = self.obj.owner, 
+                        fName = self.obj.fName,
+                        file = self.obj.file,
+                        actualSize = self.obj.actualSize,
+                        FID = self.obj.FID,
+                        #start = storageNode[0]["Gap"][0],
+                        start = 0,
+                        isCached = False,
+                        SID = storageNode["SID"])
+                    
+                    shutil.rmtree(cwd)
                     
             

@@ -183,17 +183,22 @@ class pRAID:
     
     def repair(fName, fileList, storageLocation):
         
+        fileList
         
-        
-        validPart = open(os.path.join(storageLocation,f"{fName}-{partNum1}"), "rb")
-        parity = open (os.path.join(storageLocation,f"{fName}-{partNum2}"), "rb")
+        validPart = open(os.path.join(storageLocation, fileList[0]), "rb")
+        parity = open (os.path.join(storageLocation,fileList[1]), "rb")
         
         # Define the list of possible inputs
         possibleParts = set([0, 1, "p"])
         
         # Determine which input was not chosen
-        partList = set([partNum1,partNum2])
-        recoveredPart = list(possibleParts - partList )[0]
+        partList = set([fileList[0][-1],fileList[1][-1]])
+        
+        for i in possibleParts:
+            if i not in partList:
+               recoveredPart = i 
+        
+    
         with open(os.path.join(storageLocation,f"{fName}-{recoveredPart}"), "wb") as repairedFile:
             
             lastDataLen = None

@@ -19,14 +19,13 @@ def get_AvailabilityInCache():
     for file_obj in queryset: 
         
         if os.path.isfile(os.path.join("media", str(file_obj.id), str(file_obj.fName))):
-            print(True)
+    
             file_obj.isCached = True
             file_obj.save()
         else: 
             file_obj.isCached = False
             file_obj.save()
-            
-            print(False)          
+             
     # files[i]["isCached"] = False
 
     

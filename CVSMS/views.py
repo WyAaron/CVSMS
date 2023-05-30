@@ -336,8 +336,14 @@ def file_backToStorageNodes_view(request,id):
 def file_UNRAID_view(request,id):
     obj = Files.objects.get(id=id)
    
-    ## Files to get all of the files 
-    #
+    cwd = os.path.dirname(obj.file.path)
+     #CHECK IF THE DIRECTORY FOR THE SFTP EXISTS
+    if not os.path.exists(cwd):
+        os.mkdir(cwd)
+    else:
+        print("Directory Exists, Proceeding to SFTP")
+    
+    
     if request.method == "POST":
         if obj.RAIDtype == "0":
             print("UNRAIDING RAID 0")
@@ -348,7 +354,8 @@ def file_UNRAID_view(request,id):
             t1 = raid1_tools.thread_unraid(obj)
             t1.start()
         elif obj.RAIDtype == "PARITY":
-            print("UNRAIDING RAID PARITY")
+            t1 = parity_tools.thread_unraid(obj)
+            t1.start()
     
     context ={
         "file":obj
