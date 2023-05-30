@@ -123,15 +123,11 @@ def file_Upload_view(request):
             obj.file = request.FILES['file']
             obj.save()
             
-            
-            
-            
             FID = obj.id
             
             cwd = os.path.dirname(obj.file.path)
-            fName = obj.fName.name
-         
-            
+            fName = obj.fName
+
             
             storageNode = NodeGetTools.get_storage_nodes([fName], cwd)
             
