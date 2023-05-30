@@ -222,3 +222,14 @@ def setFileStart(start, id):
 
 	conn.commit()
 	conn.close()
+ 
+def addFID(FID, id):
+	conn = sqlite3.connect('db.sqlite3')
+	c = conn.cursor()
+
+	c.execute("UPDATE CVSMS_files SET FID = ? WHERE id = ?", (FID, id))
+	print("\nEntry updated successfully\n")
+
+	conn.commit()
+	conn.close()
+		

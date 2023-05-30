@@ -28,14 +28,11 @@ class thread_get(threading.Thread):
         
         #GET THE CWD OF THE FILE
         cwd = os.path.dirname(self.obj.file.path)
+
+
         
-        #CHECK IF THE DIRECTORY FOR THE SFTP EXISTS
-        if not os.path.exists(cwd):
-            os.mkdir(cwd)
-        else:
-            print("Directory Exists, Proceeding to SFTP")
-
-
+        
+        
         #LOOP THROUGH ALL THE FILES 
         for fileMD in file_list:
             # print(fileMD["RAIDid"])
@@ -65,6 +62,8 @@ class thread_get(threading.Thread):
                     print(e)
                     print("ERROR DOWNLOADING FILES TO BE RAIDED")
                     success = False
+                    
+                    
                     break
             else:
                 print("SKIPPED 1st ENTRY")
@@ -97,6 +96,8 @@ class thread_unraid(threading.Thread):
         else:
             print("Directory Exists, Proceeding to SFTP")
 
+        
+        
 
         #LOOP THROUGH ALL THE FILES 
         for fileMD in file_list:
@@ -127,6 +128,7 @@ class thread_unraid(threading.Thread):
                     print(e)
                     print("ERROR DOWNLOADING FILES TO BE RAIDED")
                     success = False
+                    shutil.rmtree(cwd)
                     break
             else:
                 print("SKIPPED 1st ENTRY")
@@ -138,14 +140,9 @@ class thread_unraid(threading.Thread):
             sorted_file_list = sorted(file_list, key=lambda item: item["RAIDid"])
             fileList = [sorted_file_list[1]["fName"], sorted_file_list[2]["fName"]]
             raid_module.raid0.merge(sorted_file_list[0]["fName"], fileList, cwd)
-        
-        
-        
+
             fName = self.obj.fName
-            
-            
-            
-            
+        
             
             storageNode = NodeGetTools.get_storage_nodes([fName], cwd)
         
@@ -188,5 +185,7 @@ class thread_unraid(threading.Thread):
                 start = 0,
                 isCached = False,
                 SID = storageNode["SID"])
+            
+            shutil.rmtree(cwd)
                 
         

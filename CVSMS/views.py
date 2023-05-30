@@ -34,7 +34,7 @@ import modules.sftp.sftp_tools as sftp_tools
 #MODULES FOR RAIDING FILES AND INITIATING ITS SFTP
 import modules.sftp.thread_sftp as thread_sftp
 import modules.sftp.raid.raid0_tools as raid0_tools
-# import modules.sftp.raid.thread_raid1 as thread_raid1
+import modules.sftp.raid.raid1_tools as raid1_tools
 # import modules.sftp.raid.thread_praid as thread_praid
 #-----------------------------
 
@@ -109,25 +109,24 @@ def file_Upload_view(request):
     if request.method == "POST":
         form = FileForm(request.POST, request.FILES)
         if form.is_valid():
-            try:
-                id  = Files.objects.latest('id')
-                FID = id.id+1
-            except:
-                FID = 1   
-   
-       
-     
-            # #TODO CONNECTED STORAGE NODES
+            
+            # # #TODO CONNECTED STORAGE NODES
             obj = Files.objects.create(
             owner=request.user, 
             fName= request.FILES["file"],
-            file=request.FILES['file'],
             actualSize=request.FILES["file"].size,
-            FID=FID,isCached=False)
-  
-            
+            isCached=False)
+
+            serverDButil.addFID(obj.id, obj.id)
     
+            obj = Files.objects.get(id=obj.id)
+            obj.file = request.FILES['file']
+            obj.save()
             
+            
+            
+            
+            FID = obj.id
             
             cwd = os.path.dirname(obj.file.path)
             fName = obj.fName.name
@@ -169,7 +168,7 @@ def file_Upload_view(request):
                 serverDButil.delMD(FID)
                 messages.info(request,"There is no more space")
             
-            #CREATE DB ENTRY FOR FILE SAVED
+
             
         return redirect('/')
     else:
@@ -200,22 +199,6 @@ def file_Retreive_view(request,id):
         print("Directory Exists, Proceeding to SFTP")
     #TODO CONNECTED STORAGE NODES
     
-    #fileList = serverDButil.searchMD([obj.FID])
-
-    
-    #fileTuple = []
-    
-    # if fileList[0]["RAIDtype"] != "NONE":
-    #     for i in range(1,len(fileList)):
-    #         fName = fileList[i]["fName"]
-    #         fileTuple.append((fName, storageNodeList[i-1]))
-    
-    # else:
-    #     fileTuple.append((fName, storageNodeList[0]))
-        
-
-    
-    
     context = {
         'button': False
     }
@@ -244,7 +227,8 @@ def file_Retreive_view(request,id):
                 raid_get_thread.start()
                 
             elif obj.RAIDtype == "1":
-                print("RAID 1: WIP")
+                raid_get_thread = raid1_tools.thread_get(obj)
+                raid_get_thread.start()
             
             else:
                 print("RAID PARITY: WIP")
@@ -363,6 +347,8 @@ def file_UNRAID_view(request,id):
             t1.start()
         elif obj.RAIDtype == "1":
             print("UNRAIDING RAID 1")
+            t1 = raid1_tools.thread_unraid(obj)
+            t1.start()
         elif obj.RAIDtype == "PARITY":
             print("UNRAIDING RAID PARITY")
     
