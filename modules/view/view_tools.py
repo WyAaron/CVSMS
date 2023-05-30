@@ -13,13 +13,20 @@ def get_fileTotalSize():
 
 
 def get_AvailabilityInCache():
-    files = Files.objects.all()
-    print(files["fName"])
-    # for i in range(len(files)): 
-    #     a = i+1
-    #     if os.path.isfile(os.path.join("media", str(a), str(files[i]["fName"]))):
-    #         files[i]["isCached"] = True
-    #     else: 
-    #         files[i]["isCached"] = False
+    queryset = Files.objects.all()
+    
+    
+    for file_obj in queryset: 
+        
+        if os.path.isfile(os.path.join("media", str(file_obj.id), str(file_obj.fName))):
+            print(True)
+            file_obj.isCached = True
+            file_obj.save()
+        else: 
+            file_obj.isCached = False
+            file_obj.save()
+            
+            print(False)          
+    # files[i]["isCached"] = False
 
     

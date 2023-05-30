@@ -45,7 +45,7 @@ import modules.sftp.raid.raid1_tools as raid1_tools
 # Home view of user
 @login_required
 def home_view(request): 
-    # view_tools.get_AvailabilityInCache()
+    view_tools.get_AvailabilityInCache()
     user = request.user 
     if user.is_superuser: 
         context = {
@@ -240,7 +240,7 @@ def file_Retreive_view(request,id):
                 file_download = get_object_or_404(Files, pk = id )
                 print(id)
                 response = HttpResponse(file_download.file, content_type='multipart/form-data')
-                response['Content-Disposition'] =f'attactments; fName="{file_download.fName}"' 
+                response['Content-Disposition'] =f'attactments; fileName="{file_download.fName}"' 
                 return response
         else: # file is downloading from storage node
             messages.info(request,f'file is downloading')
