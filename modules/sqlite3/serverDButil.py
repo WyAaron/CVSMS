@@ -167,10 +167,7 @@ def get_all_files_by_sid(SID):
 	conn.commit()
 	conn.close()
  
-	if keyValue:
-		return keyValue[0]
-	else:
-		return None
+	return keyValue
 
 def getFileMD(FID):
 	conn = sqlite3.connect('db.sqlite3')
@@ -210,6 +207,17 @@ def setRAIDtype(RAIDtype, id):
 	c = conn.cursor()
 
 	c.execute("UPDATE CVSMS_files SET RAIDtype = ? WHERE FID = ?", (RAIDtype, id))
+	print("\nEntry updated successfully\n")
+
+	conn.commit()
+	conn.close()
+ 
+
+def setFileStart(start, id):
+	conn = sqlite3.connect('db.sqlite3')
+	c = conn.cursor()
+
+	c.execute("UPDATE CVSMS_files SET start = ? WHERE FID = ?", (start, id))
 	print("\nEntry updated successfully\n")
 
 	conn.commit()

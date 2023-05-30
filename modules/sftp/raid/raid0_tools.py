@@ -16,8 +16,6 @@ import modules.RAIDmod as raid_module
 from CVSMS.models import  Files,storageNodeInfo
 
 
-
-    
     
 class thread_get(threading.Thread):
     def __init__(self, obj):
@@ -28,13 +26,21 @@ class thread_get(threading.Thread):
     def run(self):
         file_list = serverDButil.getFileMD(self.obj.FID)
         
+        #GET THE CWD OF THE FILE
+        cwd = os.path.dirname(self.obj.file.path)
         
+        #CHECK IF THE DIRECTORY FOR THE SFTP EXISTS
+        if not os.path.exists(cwd):
+            os.mkdir(cwd)
+        else:
+            print("Directory Exists, Proceeding to SFTP")
+
+
+        #LOOP THROUGH ALL THE FILES 
         for fileMD in file_list:
             # print(fileMD["RAIDid"])
             if fileMD["RAIDid"] != -1:
                 storageNode = serverDButil.getStorageNode(fileMD["SID"])
-                
-                cwd = os.path.dirname(self.obj.file.path)
                 
                 message = {
                 "fName": fileMD["fName"],
@@ -43,35 +49,144 @@ class thread_get(threading.Thread):
                 "cwd" : cwd
                 }
                 
+                #CONDITION CHECKER FOR SFTP IF SUCCESSFUL
+                success = True
                 
-                #CHECK IF FILE EXISTS
-
-                if not os.path.isfile(os.path.join(cwd, fileMD["fName"])): #condition for file DNE in server
-                    print(f'file is not in cache downloading...')
-                    if not os.path.exists(cwd):
-                        os.mkdir(cwd)
+                try:
+                    #CHECK IF FILE IS IN CACHE
+                    if not os.path.isfile(os.path.join(cwd, fileMD["fName"])): #condition for file DNE in server
+                        print(f'file is not in cache downloading...')
+                        #GET THE FILES
+                        sftp_tools.get(message, storageNode)
                     else:
-                        print("Directory Exists, Proceeding to SFTP")
-                
-                    #GET THE FILES
-                    sftp_tools.get(message, storageNode)
+                        print("Part Exists")
+                        
+                except Exception as e:
+                    print(e)
+                    print("ERROR DOWNLOADING FILES TO BE RAIDED")
+                    success = False
+                    break
             else:
                 print("SKIPPED 1st ENTRY")
                 
-                
-        sorted_file_list = sorted(file_list, key=lambda item: item["RAIDid"])
-        if self.obj.RAIDtype == "0":
+        if not success:
+            #SORT THE FILES BY RAID ID
+            print("ERROR IN SFTP")
+        else:
+            sorted_file_list = sorted(file_list, key=lambda item: item["RAIDid"])
             fileList = [sorted_file_list[1]["fName"], sorted_file_list[2]["fName"]]
-            
             raid_module.raid0.merge(sorted_file_list[0]["fName"], fileList, cwd)
-            pass
+
+
+
+class thread_unraid(threading.Thread):
+    def __init__(self, obj):
+        # execute the base constructor
+        threading.Thread.__init__(self)
+        self.obj = obj
+
+    def run(self):
+        file_list = serverDButil.getFileMD(self.obj.FID)
         
-        elif self.obj.RAIDtype == "1":
-            pass
+        #GET THE CWD OF THE FILE
+        cwd = os.path.dirname(self.obj.file.path)
         
-        elif self.obj.RAIDtype == "PARITY":
-            pass
+        #CHECK IF THE DIRECTORY FOR THE SFTP EXISTS
+        if not os.path.exists(cwd):
+            os.mkdir(cwd)
+        else:
+            print("Directory Exists, Proceeding to SFTP")
+
+
+        #LOOP THROUGH ALL THE FILES 
+        for fileMD in file_list:
+            # print(fileMD["RAIDid"])
+            if fileMD["RAIDid"] != -1:
+                storageNode = serverDButil.getStorageNode(fileMD["SID"])
+                
+                message = {
+                "fName": fileMD["fName"],
+                "FID" : fileMD["FID"],
+                "command" : "download",
+                "cwd" : cwd
+                }
+                
+                #CONDITION CHECKER FOR SFTP IF SUCCESSFUL
+                success = True
+                
+                try:
+                    #CHECK IF FILE IS IN CACHE
+                    if not os.path.isfile(os.path.join(cwd, fileMD["fName"])): #condition for file DNE in server
+                        print(f'file is not in cache downloading...')
+                        #GET THE FILES
+                        sftp_tools.get(message, storageNode)
+                    else:
+                        print("Part Exists")
+                        
+                except Exception as e:
+                    print(e)
+                    print("ERROR DOWNLOADING FILES TO BE RAIDED")
+                    success = False
+                    break
+            else:
+                print("SKIPPED 1st ENTRY")
+                
+        if not success:
+            #SORT THE FILES BY RAID ID
+            print("ERROR IN SFTP")
+        else:
+            sorted_file_list = sorted(file_list, key=lambda item: item["RAIDid"])
+            fileList = [sorted_file_list[1]["fName"], sorted_file_list[2]["fName"]]
+            raid_module.raid0.merge(sorted_file_list[0]["fName"], fileList, cwd)
         
         
         
-        pass
+            fName = self.obj.fName
+            
+            
+            
+            
+            
+            storageNode = NodeGetTools.get_storage_nodes([fName], cwd)
+        
+        if storageNode:
+            
+            message = {
+                "fName": fName,
+                "FID" : fileMD["FID"],
+                "command" : "upload",
+                "cwd" : cwd,
+                #"start" : storageNode[0]["Gap"][0],
+                "start" : 0,
+                "command":"upload"
+            }
+            
+        
+            success = True
+            try: 
+                storageNode = storageNode[0]["storage_info"]
+                sftp_tools.put(message, storageNode)
+                
+            except Exception as e:
+                print(e)
+                success = False
+            
+            if not success:
+                print("SFTP of merged file failed")
+                
+            else:
+                
+                print("SFTP upload of merged file success")
+                serverDButil.delMD(self.obj.FID)
+                Files.objects.create(
+                owner = self.obj.owner, 
+                fName = self.obj.fName,
+                file = self.obj.file,
+                actualSize = self.obj.actualSize,
+                FID = self.obj.FID,
+                #start = storageNode[0]["Gap"][0],
+                start = 0,
+                isCached = False,
+                SID = storageNode["SID"])
+                
+        

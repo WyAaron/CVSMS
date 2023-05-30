@@ -19,18 +19,32 @@ def filter_node_list():
     pass
 
 
+#---------------GET MAXIMUM FILE TO STOR IN THE NODE------------------
+def getMaxFile(mdList, storSize):
+    fragments = fragmentCheck(mdList, storSize)
+    largest = 0
+    for i in fragments:
+        if i[1] - i[0] > largest:
+            largest = i[1] - i[0]
+    return largest
+
+
 
 #-----------------Fragmented Check-----------------------
 def fragmentCheck(mdList, storSize):
     #sort json list based on start point to sort the files
-    jsonList = sorted(mdList, key=lambda k: k["start"])
+    if mdList:
+        jsonList = sorted(mdList, key=lambda k: k["start"])
+    else:
+        jsonList = mdList
+    
     
     prev_end = 0
     spaceBetweenFiles  = []
     
     for file in jsonList:
         # Calculate the end byte of the current file
-        endByte = file["start"] + file["fileSize"]
+        endByte = file["start"] + file["actualSize"]
         
         #calculate if there is a gap between the previous file and the current file
         if file["start"] != 0:
@@ -73,7 +87,7 @@ def get_storage_nodes(partNames,cwd):
     #             continue
             
     #         files_in_node = serverDButil.get_all_files_by_sid(storage_node["SID"])
-    #         node_allocated_size = serverDButil.get_all_files_by_sid(storage_node["allocSize"])
+    ##         node_allocated_size = serverDButil.get_all_files_by_sid(storage_node["allocSize"])
     #         gap_list = fragmentCheck(files_in_node, node_allocated_size)
             
             
@@ -88,7 +102,7 @@ def get_storage_nodes(partNames,cwd):
             
     #         #CHECK IF NEW FOUND SPACE IN THE NEW NODE IS SMALLER THAN PREVIOUSLY FOUND SPACE            
     #         if smallestSpaceBetween is None or (newSmallestSpace[1] - newSmallestSpace[0]) < (storage_node["Gap"][0] - storage_node["Gap"][1]):  
-    #             storage_node = ({"storageNode": storage_node , "Gap": newSmallestSpace})
+    #             storage_node = {"storageNode": storage_node , "Gap": newSmallestSpace}
         
     #     #IF THERE WAS NO NODE FOUND END FUNCTION AND RETURN NONE
     #     if storage_node == None:
@@ -105,6 +119,7 @@ def get_storage_nodes(partNames,cwd):
             
     file_and_node_tuple_list = []
     for partName in partNames:
+
         file_size = os.path.getsize(os.path.join(cwd, partName))
         
         storageNode = None

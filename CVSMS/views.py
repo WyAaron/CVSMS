@@ -14,7 +14,8 @@ from django.contrib import messages
 
 import shutil
 
-from django.db.models import Q
+from django.db import models
+
 # Cr = "eate your views here.
 
 
@@ -113,44 +114,57 @@ def file_Upload_view(request):
                 FID = id.id+1
             except:
                 FID = 1   
-           
-            #TODO CONNECTED STORAGE NODES
+   
+       
+     
+            # #TODO CONNECTED STORAGE NODES
             obj = Files.objects.create(
             owner=request.user, 
             fName= request.FILES["file"],
             file=request.FILES['file'],
             actualSize=request.FILES["file"].size,
             FID=FID,isCached=False)
-                        
+  
+            
+    
+            
+            
             cwd = os.path.dirname(obj.file.path)
-            fName = os.listdir(cwd)[0]
-
-
-        
+            fName = obj.fName.name
+         
+            
+            
             storageNode = NodeGetTools.get_storage_nodes([fName], cwd)
             
-            
+            #GET FILE START BYTE
+            #start = storageNode[0]["Gap"][0]
+            start = 0
+            #SET FILE START BYTE
+            serverDButil.setFileStart(start, FID)
             
             if storageNode:
                 
                 storageNode = storageNode[0]["storage_info"]
-                serverDButil.addStorageNode(storageNode["SID"],obj.FID)
+                serverDButil.addStorageNode(storageNode["SID"],FID)
                 message = {
                 "fName": fName,
-                "FID" : obj.FID,
+                "FID" : FID,
                 "cwd" : cwd,
+                "start" :start,
                 "command":"upload"
                 }
-                messages.info(request,f'File has been uploaded!')
+                
                 try:
                     
                     t1 = thread_sftp.SFTPThread(message, storageNode, deleteFolder=True)
                     t1.start()
 
+                    messages.info(request,f'File has been uploaded!')
                     
                 except Exception as e:
                     #Todo Function when false it must delete file from db 
                     print(e)
+                    serverDButil.delMD(FID)
             else:
                 serverDButil.delMD(FID)
                 messages.info(request,"There is no more space")
@@ -206,7 +220,7 @@ def file_Retreive_view(request,id):
         'button': False
     }
 
-
+    
     if not os.path.isfile(os.path.join(cwd,fName)): #condition for file DNE in server
         messages.info(request,f'file started downloading from storage node.')
         # create the thread
@@ -225,8 +239,15 @@ def file_Retreive_view(request,id):
             thread.start()
         else:
             print("DOWNLOADING RAIDED FILES")
-            raid_get_thread = raid0_tools.thread_get(obj)
-            raid_get_thread.start()
+            if obj.RAIDtype == "0":
+                raid_get_thread = raid0_tools.thread_get(obj)
+                raid_get_thread.start()
+                
+            elif obj.RAIDtype == "1":
+                print("RAID 1: WIP")
+            
+            else:
+                print("RAID PARITY: WIP")
         return redirect('/')
         
         # t1.start()
@@ -332,12 +353,24 @@ def file_backToStorageNodes_view(request,id):
 #TODO
 def file_UNRAID_view(request,id):
     obj = Files.objects.get(id=id)
-    print(f'UNRAIDED! {obj}')
+   
     ## Files to get all of the files 
-    ##
+    #
+    if request.method == "POST":
+        if obj.RAIDtype == "0":
+            print("UNRAIDING RAID 0")
+            t1 = raid0_tools.thread_unraid(obj)
+            t1.start()
+        elif obj.RAIDtype == "1":
+            print("UNRAIDING RAID 1")
+        elif obj.RAIDtype == "PARITY":
+            print("UNRAIDING RAID PARITY")
+    
     context ={
         "file":obj
     }
+    
+    
     return render(request,'file-UNRAID.html',context)
 
 
