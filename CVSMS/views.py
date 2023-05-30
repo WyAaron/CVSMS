@@ -210,7 +210,7 @@ def file_Retreive_view(request,id):
     if not os.path.isfile(os.path.join(cwd,fName)): #condition for file DNE in server
         messages.info(request,f'file started downloading from storage node.')
         # create the thread
-        if obj.RAIDtype == -1:
+        if obj.RAIDtype == "NONE":
             #GET DATA FROM DB
             fileMD = serverDButil.getFileMD(obj.FID)[0]
             storageNode = serverDButil.getStorageNode(fileMD["SID"])
@@ -237,11 +237,10 @@ def file_Retreive_view(request,id):
         if os.path.getsize(os.path.join(cwd,fName)) == obj.actualSize: #File complete download from storage node
             if request.method == "GET": 
                 file_download = get_object_or_404(Files, pk = id )
-                #path = os.path.join(obj.FID, fName)
-                print(type(file_download.file))
-                # response = HttpResponse(file_download.file, content_type='multipart/form-data')
-                # response['Content-Disposition'] =f'attactments; fName="{file_download.fName}"' 
-                # return response
+                print(id)
+                response = HttpResponse(file_download.file, content_type='multipart/form-data')
+                response['Content-Disposition'] =f'attactments; fName="{file_download.fName}"' 
+                return response
         else: # file is downloading from storage node
             messages.info(request,f'file is downloading')
     
@@ -287,12 +286,18 @@ def file_RAID_view(request,id):
 
     
 def file_Delete_view(request, id): 
-    file = Files.objects.get(id=id)
+    obj = Files.objects.get(id=id)
+    
     if request.method == "POST":
-        serverDButil.delMD(file.FID)
+        
+        serverDButil.delMD(obj.FID)
+        cwd = os.path.dirname(obj.file.path)
+        
+        if os.path.exists(cwd):
+            shutil.rmtree(cwd)
         return redirect('/')
     context = {
-        "file":file
+        "file":obj
     }  
     
     return render(request,'file-Delete.html',context)
