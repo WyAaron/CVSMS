@@ -54,6 +54,7 @@ class thread_get(threading.Thread):
             "FID" : fileMD["FID"],
             "command" : "download",
             "size": fileMD["actualSize"],
+            "start": fileMD["start"],
             "cwd" : cwd
             }
                     

@@ -45,7 +45,7 @@ def put(message,storageNode):
                 break
             
             elif data == "downloading":
-                print("Storage Node is Still downloading...")
+                print("Storage Node is downloading...")
                 message = str("recvd").encode()
                 s.sendall(message)
             
@@ -98,13 +98,13 @@ def get(message,storageNode):
                 s.sendall(message)
                 break
             
-            elif data == "downloading":
-                print("Storage Node is Still downloading...")
+            elif data == "uploading":
+                print("Storage Node is uploading...")
                 message = str("recvd").encode()
                 s.sendall(message)
             
-            elif data == "storing":
-                print("Storage node is writing file in storage node...")    
+            elif data == "retrieving":
+                print("Storage node is retrieving file from storage node...")    
                 message = str("recvd").encode()
                 s.sendall(message)
                 
@@ -115,24 +115,9 @@ def get(message,storageNode):
                 raise Exception("FAILED UPLOAD")
             
             
-            
-
-            
         print("SFTP OPERATION FINISHED")
         
         
-        print("Storage Node is Uploading to server...")
         
-        #WAIT FOR STORAGE NODE's REPLY THAT IT IS DONE UPLOADING
-        data = s.recv(1024)
-        
-        
-        #ONCE STORAGE NODE IS DONE UPLOADING 
-        #INFORM USER THAT UPLOADING IS DONE AND FILE THE CAN BE DOWNLOADED
-        if data.decode() == "ok":
-            print("Storage Node successful upload")
-            
-                
-        else:
-            print("ERROR FROM STORANGE NODE UPLOAD")
+  
 

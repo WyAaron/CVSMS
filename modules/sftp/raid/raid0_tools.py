@@ -57,6 +57,7 @@ class thread_get(threading.Thread):
                     "fName": fileMD["fName"],
                     "FID" : fileMD["FID"],
                     "size": fileMD["actualSize"],
+                    "start" : fileMD["start"],
                     "command" : "download",
                     "cwd" : cwd
                     }
@@ -135,6 +136,7 @@ class thread_unraid(threading.Thread):
                     "fName": fileMD["fName"],
                     "FID" : fileMD["FID"],
                     "size": fileMD["actualSize"],
+                    "start" : fileMD ["start"],
                     "command" : "download",
                     "cwd" : cwd
                     }
@@ -180,6 +182,7 @@ class thread_unraid(threading.Thread):
                         "FID" : self.obj.FID,
                         "cwd" : cwd,
                         #"start" : storageNode[0]["Gap"][0],
+                        "size" : self.obj.actualSize,
                         "start" : 0,
                         "command":"upload"
                     }

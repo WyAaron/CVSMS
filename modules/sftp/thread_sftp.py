@@ -94,6 +94,8 @@ class raidPut(threading.Thread):
             "fName": fName,
             "FID" : self.obj.FID,
             "cwd" : cwd,
+            "start" : self.obj.start,
+            "size" : self.obj.actualSize,
             "command":"download"
         }
         
@@ -171,6 +173,7 @@ class raidPut(threading.Thread):
                         "FID" : self.obj.FID,
                         "cwd" : cwd,
                         #"start":i["storage_info"]["Gap"][0],
+                        "start" : 0,
                         "command":"upload"
                     }
     

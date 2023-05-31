@@ -136,11 +136,15 @@ def file_Upload_view(request):
             
             storageNode = NodeGetTools.get_storage_nodes([fName], cwd)
             
+            
             #GET FILE START BYTE
             #start = storageNode[0]["Gap"][0]
             start = 0
+            
+            obj.start = start
+            obj.save()
             #SET FILE START BYTE
-            serverDButil.setFileStart(start, FID)
+            #serverDButil.setFileStart(start, FID)
             
             if storageNode:
                 
@@ -151,7 +155,7 @@ def file_Upload_view(request):
                 "FID" : FID,
                 "cwd" : cwd,
                 "size": obj.actualSize,
-                "start" :start,
+                "start" :obj.start,
                 "command":"upload"
                 }
                 
@@ -214,10 +218,12 @@ def file_Retreive_view(request,id):
             fileMD = serverDButil.getFileMD(obj.FID)[0]
             storageNode = serverDButil.getStorageNode(fileMD["SID"])
             message = {
+                "fName": obj.fName,
                 "FID" : obj.FID,
                 "cwd" : cwd,
                 "command":"download",
                 "size": obj.actualSize,
+                "start": obj.start,
                 "RAIDtype": obj.RAIDtype
                 }
             thread = thread_sftp.standard_get(message, fName, storageNode)
