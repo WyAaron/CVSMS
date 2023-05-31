@@ -34,11 +34,11 @@
 import socket
 import paramiko
 import json
-import fileMod
+import fileMod as file_module
 import os
-import storageNodeMD
 import shutil
 import threading
+import time
 #from RetrieveFile import *
 
 # Setup to easily reuse byte sizes
@@ -46,8 +46,9 @@ KB = 2 ** 10
 MB = 2 ** 20
 GB = 2 ** 30
 
+thread_crashed = False
 
-# fileMod.CreateAlloc(1*GB,"storage")
+file_module.CreateAlloc(1*GB,"storage")
 # storageNodeMD.createMD()
 
 
@@ -65,6 +66,7 @@ def main(host, port, serverName, password):
         s.bind((host, port))
         s.listen(1)
         conn, addr = s.accept()
+        conn.settimeout(10)
         
         print('Connected by', addr)
         
@@ -75,105 +77,307 @@ def main(host, port, serverName, password):
         #Receive server request
         data = conn.recv(1024)
         
+        
         message = json.loads(data.decode())
         command = message["command"]
         
-        print(message)
         
         if command == "download":
+            print("SERVER HAS INITIATED DOWNLOAD")
             
             if not os.path.exists(str(message["FID"])):
                 os.mkdir(str(message["FID"]))
             #USER REQURIES A DOWNLOAD
+            try:  
+                def fileStorage():
+                    try:
                         
-            #GET FILE FROM STORAGE ALLOCATION
-            #fileMD = storageNodeMD.searchMD([message["FID"]])
-            #fileMod.retFile(fileMD, storageLoc)
+                        global thread_crashed
+                        thread_crashed = False
+                        
+                        #IMPLEMENT FILE MOD
+                        
+                        file_module.retFile(message, storageLoc)
+                        print("FINISHED FILE RETRIEVAL PROCEEDING TO SFTP")
+                        
+                    except Exception as e:
+                        print(e)
+                        if os.path.exists(str(message["FID"])):
+                            shutil.rmtree(str(message["FID"]))
+                            thread_crashed = True
+                
+                #START FILE RETIREVAL THREAD
+                file_mod_thread = threading.Thread(target=fileStorage)
+                file_mod_thread.start()
+                
+                while file_mod_thread.is_alive():
+                    time.sleep(1)
+                    messageUp = str("retrieving").encode()
+                    conn.sendall(messageUp)
+                
+                    #CONFIRM THAT SERVER MESSAGE RECEIVED
+                    try:
+                        data = conn.recv(1024).decode()
+                        if data != "recvd": 
+                            raise Exception("SERVER FAILED")
+                    except:
+                        raise Exception("SERVER DID NOT REPLY")
+                
+                
+                #CHECK IF FILE MODULE CRASHED
+                    if thread_crashed:
+                        messageUp = str("fail").encode()
+                        print(messageUp)
+                        conn.sendall(messageUp)
+                        
+                        #CONFIRM THAT SERVER MESSAGE RECEIVED
+                        try:
+                            data = conn.recv(1024).decode()
+                            if data != "recvd": 
+                                raise Exception("SERVER FAILED")
+                        except:
+                            raise Exception("SERVER DID NOT REPLY")
+                            
+                        raise Exception("FILE MODULE FAILED")  
+                
+                
+                
+                #START SFTP UPLOAD    
+                def SFTP():
+                    try:
+                        global thread_crashed
+                        thread_crashed = False
+                        ssh = paramiko.SSHClient()
+                        ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+                        ssh.connect(hostname=addr[0], username=serverName, password=password, port=22)
+                        #CONNECT TO SERVER
+                        with ssh.open_sftp() as sftp_client:
+                            sftp_client.chdir(message["cwd"])
+                            #UPLOAD TO SERVER
+                            sftp_client.put( os.path.join(str(message["FID"]),message["fName"]), message["fName"])
+                        ssh.close()
+                    except Exception as e:
+                            print(e)
+                            thread_crashed = True
+                            
+                            
+                #START SFTP THREAD
+                sftp_thread = threading.Thread(target=SFTP)
+                sftp_thread.start()            
+                        
+                        
+                #HEARTBEAT WHILE SFTP IS ONGOING    
+                while sftp_thread.is_alive():
+                    time.sleep(1)
+                    messageUp = str("uploading").encode()
+                    conn.sendall(messageUp)
+                    
+                    #CONFIRM THAT SERVER MESSAGE RECEIVED
+                    try:
+                        data = conn.recv(1024).decode()
+                        if data != "recvd": 
+                            raise Exception("SERVER FAILED")
+                    except:
+                        raise Exception("SERVER DID NOT REPLY")            
+                            
+                            
+                #CHECK IF SFTP THREAD CRASHED AND EXIT IF IT DID
+                if thread_crashed:
+                    endMessage = str("fail").encode()
+                    print(endMessage)
+                    conn.sendall(endMessage)
+                    
+                    #CONFIRM THAT SERVER MESSAGE RECEIVED
+                    try:
+                        data = conn.recv(1024).decode()
+                        if data != "recvd": 
+                            raise Exception("SERVER FAILED")
+                    except:
+                        raise Exception("SERVER DID NOT REPLY")
+                        
+                    raise Exception("SFTP FAILED")    
+                
+                
+                #SEND SUCCESS MESSAGE
+                endMessage = str("done").encode()
+                print(endMessage)
+                conn.sendall(endMessage)  
+                
+                
+                
+                #CONFIRM THAT SERVER MESSAGE RECEIVED
+                try:
+                    data = conn.recv(1024).decode()
+                    if data != "recvd": 
+                        raise Exception("SERVER FAILED")
+                except:
+                    raise Exception("SERVER DID NOT REPLY")
+                
+                shutil.rmtree(str(message["FID"]))
             
-            
-            ssh = paramiko.SSHClient()
-            ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-            ssh.connect(hostname=addr[0], username=serverName, password=password, port=22)
-            #CONNECT TO SERVER
-            with ssh.open_sftp() as sftp_client:
-                sftp_client.chdir(message["cwd"])
-                #UPLOAD TO SERVER
-                sftp_client.put( os.path.join(str(message["FID"]),message["fName"]), message["fName"])
-            ssh.close()
-            
+        
+            except Exception as e: 
+                print(e)
+                if os.path.exists(str(message["FID"])):
+                    shutil.rmtree(str(message["FID"])) 
             #SEND UPDATED DB
-            conn.sendall(b"ok")
+            #conn.sendall(b"ok")
             #os.remove(fName)
             #shutil.rmtree(str(message["FID"]))   
             
             
             
         elif command == "upload":
+            
+            print("SERVER HAS INITIATED UPLOAD")
+            
             if not os.path.exists(str(message["FID"])):
                 os.mkdir(str(message["FID"]))
+                
+            try:
+                def SFTP():
+                    try:
+                        global thread_crashed
+                        thread_crashed = False
+                        #exit()
+                        with paramiko.SSHClient() as ssh:
+                            ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+                            ssh.connect(hostname=addr[0], username=serverName, password="password", port=22)
+                            #CONNECT TO SERVER
+                            with ssh.open_sftp() as sftp_client:
+                                sftp_client.chdir(message["cwd"])
+                                #DOWNLOAD FROM SERVER
+                                sftp_client.get(message["fName"], os.path.join(str(message["FID"]),message["fName"]))
+                            # ssh.close()
+                        #time.sleep(2) #SIMULATE LONG DOWNLOAD TIME
+                    except Exception as e:
+                        print(e)
+                        thread_crashed = True
+                        
+                #START SFTP THREAD
+                sftp_thread = threading.Thread(target=SFTP)
+                sftp_thread.start()
+                
+                
+                #HEARTBEAT WHILE SFTP IS ONGOING    
+                while sftp_thread.is_alive():
+                    time.sleep(1)
+                    messageUp = str("downloading").encode()
+                    conn.sendall(messageUp)
+                    
+                    #CONFIRM THAT SERVER MESSAGE RECEIVED
+                    try:
+                        data = conn.recv(1024).decode()
+                        if data != "recvd": 
+                            raise Exception("SERVER FAILED")
+                    except:
+                        raise Exception("SERVER DID NOT REPLY")
+                        
+                
+                    
+                    
+                #CHECK IF SFTP THREAD CRASHED AND EXIT IF IT DID
+                if thread_crashed:
+                    endMessage = str("fail").encode()
+                    print(endMessage)
+                    conn.sendall(endMessage)
+                    
+                    #CONFIRM THAT SERVER MESSAGE RECEIVED
+                    try:
+                        data = conn.recv(1024).decode()
+                        if data != "recvd": 
+                            raise Exception("SERVER FAILED")
+                    except:
+                        raise Exception("SERVER DID NOT REPLY")
+                        
+                    raise Exception("SFTP FAILED")
+                
+          
+                def fileStorage():
+                    try:
+                        global thread_crashed
+                        thread_crashed = False
+                        
+                        #IMPLEMENT FILE MOD
+                        
+                        file_module.storeFile(message["fName"], message["FID"], message["start"], storageLoc)
+                        
+                        #REMOVE FILE AFTER STORING
+                        shutil.rmtree(str(message["FID"]))
+                        
+                    except Exception as e:
+                        print(e)
+                        shutil.rmtree(str(message["FID"]))
+                        thread_crashed = True
+                   
+                
+               
+                
+                #START FILE STORAGE THREAD
+                file_mod_thread = threading.Thread(target=fileStorage)
+                file_mod_thread.start()
+                
+                
+                #CHECK IF FILE MODULE IS STILL ALIVE
+                while file_mod_thread.is_alive():
+                    time.sleep(1)
+                    messageUp = str("storing").encode()
+                    conn.sendall(messageUp)
+
+                    #CONFIRM THAT SERVER MESSAGE RECEIVED
+                    try:
+                        data = conn.recv(1024).decode()
+                        if data != "recvd": 
+                            raise Exception("SERVER FAILED")
+                    except:
+                        raise Exception("SERVER DID NOT REPLY")
+                
+                #CHECK IF FILE MODULE CRASHED
+                if thread_crashed:
+                    messageUp = str("fail").encode()
+                    print(messageUp)
+                    conn.sendall(messageUp)
+                    
+                    #CONFIRM THAT SERVER MESSAGE RECEIVED
+                    try:
+                        data = conn.recv(1024).decode()
+                        if data != "recvd": 
+                            raise Exception("SERVER FAILED")
+                    except:
+                        raise Exception("SERVER DID NOT REPLY")
+                        
+                    raise Exception("FILE MODULE FAILED")
+      
+                
+                #SEND SUCCESS MESSAGE
+                endMessage = str("done").encode()
+                print(endMessage)
+                conn.sendall(endMessage)
+                
+                
+                #CONFIRM THAT SERVER MESSAGE RECEIVED
+                try:
+                    data = conn.recv(1024).decode()
+                    if data != "recvd": 
+                        raise Exception("SERVER FAILED")
+                except:
+                    raise Exception("SERVER DID NOT REPLY")
+                
+             
+                #create Lock release
+                #shutil.rmtree(str(message["FID"]))
+            except Exception as e: 
+                print(e)
+                if os.path.exists(str(message["FID"])):
+                    shutil.rmtree(str(message["FID"]))
             
-            ssh = paramiko.SSHClient()
-            ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-            ssh.connect(hostname=addr[0], username=serverName, password="password", port=22)
-            #CONNECT TO SERVER
-            with ssh.open_sftp() as sftp_client:
-                sftp_client.chdir(message["cwd"])
-                #DOWNLOAD FROM SERVER
-                sftp_client.get(message["fName"], os.path.join(str(message["FID"]),message["fName"]))
-            ssh.close()
-            
-            
-            
-            #create Lock get
-            
-            #enter DATABASE MODIFICATION
-            
-            # fileSize = os.path.getsize(os.path.join(str(message["FID"]), message["fName"]))
-            # mdList = storageNodeMD.showMD()
-            # start = fileMod.getStartLocation(mdList, fileSize, os.path.getsize(storageLoc))
-            # newMD = fileMod.storeFile(message["fName"], message["FID"], start, storageLoc)
-            # storageNodeMD.addMD(newMD["FID"], newMD["fileName"], newMD["fileSize"], newMD["start"])
-            
-            #LOOK FOR THE SMALLEST AVAILABLE LOCATION THAT CAN FIT THE FILE
-            
-            #SEND UPDATED DB
-            mdList = storageNodeMD.showMD()
-            maxSize = fileMod.getMaxFile(mdList, os.path.getsize(storageLoc))
-            
-            messageUp = {
-                "start": 1,#start,
-                "maxSize": 10000000#maxSize
-            }
-            print(f"out: {messageUp}")
-            messageUp = json.dumps(messageUp).encode()
-            print(messageUp)
-            conn.sendall(messageUp)
-            
-            #create Lock release
-            #shutil.rmtree(str(message["FID"]))   
-            
-            
-        elif command == "delete":
-            #INSERT DATABASE DELETION
-            storageNodeMD.delMD([message["FID"]])
-            #SEND UPDATED DB
-            mdList = storageNodeMD.showMD()
-            maxSize = fileMod.getMaxFile(mdList, os.path.getsize(storageLoc))
-            
-            messageOut = {
-                "maxSize": maxSize,
-            }
-            
-            
-            messageOut = bytes(json.dumps(messageOut), 'utf-8')
-            
-            conn.sendall("messageOut")
+        
         
 if __name__ == "__main__":
-    host = "192.168.100.69"
+    host = "192.168.0.213"
     port = 5004
-    serverName = "aaron"
-    password = "aaron"
+    serverName = "thesis-ssh"
+    password = "password"
     while True:
         try:
             main(host, port, serverName, password)

@@ -108,16 +108,6 @@ def storeFile(fName, fID, start, storageLoc):
         for each in range(math.ceil(fileSize / KB)): # Read range is done per KB; Ceiling is used to write the last KB of the inputFile
             storage.write(inputFile.read(KB))
             
-        #GENERATE FILE METADATA
-        metadata = {
-            "FID":fID,
-            "fileName":fName,
-            "fileSize":fileSize,
-            "start":start
-        }
-        
-        
-        return metadata
         # #Save updated metadata to json file
         # with open("mdJson.json", "w") as f:
             
@@ -129,14 +119,19 @@ def storeFile(fName, fID, start, storageLoc):
 def retFile(fileMD, storageLoc):
     if fileMD == -1:
         print("File Does not Exist")
-        
+
     else:
-        with open(storageLoc, 'rb+') as storage, open(os.path.join(str(fileMD["FID"]), fileMD["fileName"]), 'wb') as outputFile:
+        #print(fileMD)
+        with open(storageLoc, 'rb+') as storage, open(os.path.join(str(fileMD["FID"]), fileMD["fName"]), 'wb') as outputFile:
+            
+           
             storage.seek(fileMD["start"])
             ctr = 0
-            for each in range(math.floor(fileMD["fileSize"] / KB)): # Write is done per KB; Floor is used to leave the last KB
+            
+            for each in range(math.floor(fileMD["size"] / KB)): # Write is done per KB; Floor is used to leave the last KB
+                
                 outputFile.write(storage.read(KB))
-            outputFile.write(storage.read(fileMD["fileSize"] - math.floor(fileMD["fileSize"] / KB) * KB)) # Writes the last KB in case the remaining bytes is not a full KB
+            outputFile.write(storage.read(fileMD["size"] - math.floor(fileMD["size"] / KB) * KB)) # Writes the last KB in case the remaining bytes is not a full KB
         
         
 def delFile(mdList, fID):
