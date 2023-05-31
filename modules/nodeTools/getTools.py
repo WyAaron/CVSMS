@@ -79,16 +79,16 @@ def get_storage_nodes(partNames,cwd):
         to_up_storage_node = None
         
         for storage_node in allNodes:
+            files_in_node = serverDButil.get_all_files_by_sid(storage_node["SID"])
+            
             
             #SKIP THE NODE IF THE NODE IS OFFLINE OR IF THE NODE HAS A SMALLER MAXIMUM SIZE THAT CAN BE STORED
             if storage_node["status"] == False:
                 continue
-            elif storage_node["maxSize"] < file_size:
-                continue
             
-          
-            files_in_node = serverDButil.get_all_files_by_sid(storage_node["SID"])
-      
+            elif getMaxFile(files_in_node, storage_node["allocSize"]) < file_size:
+                continue
+
             node_allocated_size = storage_node["allocSize"]
             gap_list = fragmentCheck(files_in_node, node_allocated_size)
             
@@ -115,36 +115,12 @@ def get_storage_nodes(partNames,cwd):
                                          "storage_info":to_up_storage_node})
 
         #REMOVE SELECTED NODE FROM THE LIST OF POSSIBLE NODES
-        allNodes = [item for item in allNodes if item["SID"] != storage_node["SID"]]
+        allNodes = [item for item in allNodes if item["SID"] != to_up_storage_node["storageNode"]["SID"]]
 
     
     return file_and_node_tuple_list
             
-    # file_and_node_tuple_list = []
-    # for partName in partNames:
 
-    #     file_size = os.path.getsize(os.path.join(cwd, partName))
-        
-    #     storageNode = None
-        
-    #     for node in allNodes:
-            
-    #         if node["status"] == False:
-    #             continue
-    #         elif node["maxSize"] < file_size:
-    #             continue
-    #         if node["maxSize"] >= file_size:
-    #             storageNode = node
-      
-            
-    #     if storageNode == None:
-    #         return None
-            
-    #     allNodes = [item for item in allNodes if item["SID"] != storageNode["SID"]]
-    #     file_and_node_tuple_list.append({"fName":partName, 
-    #                                       "storage_info":storageNode})
-        
-    # return file_and_node_tuple_list
     
 
             

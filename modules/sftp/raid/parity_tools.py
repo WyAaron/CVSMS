@@ -267,7 +267,8 @@ class thread_unraid(threading.Thread):
                 
                 
                 if storageNode:
-                    
+                    storageNode = storageNode[0]["storage_info"]
+                    #GET FILE START BYTE
                     start = storageNode["Gap"][0]
                     storageNode = storageNode["storageNode"]
                     
@@ -276,6 +277,7 @@ class thread_unraid(threading.Thread):
                         "fName": fName,
                         "FID" : self.obj.FID,
                         "cwd" : cwd,
+                        "size" : self.obj.actualSize,
                         "start" : start,
                         "command":"upload"
                     }
@@ -283,7 +285,6 @@ class thread_unraid(threading.Thread):
                 
                     success = True
                     try: 
-                        storageNode = storageNode[0]["storage_info"]
                         sftp_tools.put(message, storageNode)
                         
                     except Exception as e:

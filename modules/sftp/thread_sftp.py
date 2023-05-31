@@ -30,7 +30,7 @@ class SFTPThread(threading.Thread):
                 print(self.storageNode["SID"])
                 try:
                     sftp_tools.put(self.message, self.storageNode)
-                
+
                 #CHECK IF THERE ARE ANY ERRORS IN THE FILE UPLOAD
                 except Exception as e:
                     print(e)
@@ -90,14 +90,7 @@ class raidPut(threading.Thread):
         #MAKE THE DIRECTORY OF THE FILE TO BE RAIDED
     
         
-        message = {
-            "fName": fName,
-            "FID" : self.obj.FID,
-            "cwd" : cwd,
-            "start" : self.obj.start,
-            "size" : self.obj.actualSize,
-            "command":"download"
-        }
+        
         
         if not os.path.exists(cwd):
             os.mkdir(cwd)
@@ -108,7 +101,15 @@ class raidPut(threading.Thread):
         success = True
         
         storageNode = serverDButil.getStorageNode(self.obj.SID)
-                
+        
+        message = {
+            "fName": fName,
+            "FID" : self.obj.FID,
+            "cwd" : cwd,
+            "start" : self.obj.start,
+            "size" : self.obj.actualSize,
+            "command":"download"
+        }     
         try:
             #CHECK IF FILE IS IN CACHE
             if not os.path.isfile(os.path.join(cwd, fName)): #condition for file DNE in server
@@ -155,10 +156,14 @@ class raidPut(threading.Thread):
             
             #GET THE STORAGE NODES THAT CAN BE USED FOR FILE UPLOADING
             upload_list = get_tools.get_storage_nodes(partNames, cwd)
-            
+  
             #CHECK IF THERE IS ENOUGH STORAGE NODE
             if not upload_list:
-                    print("NOT ENOUGH STORAGE")
+                print("NOT ENOUGH STORAGE")
+                shutil.rmtree(cwd)
+            
+            
+            
             
             else: 
                 
@@ -166,23 +171,31 @@ class raidPut(threading.Thread):
                 success = True
                 
                 
+                time.sleep(1)
                 #BEING UPLOAD OF ALL THE FILE PARTS TO THEIR RESPECTIVE STORAGE NODES
                 for i in upload_list:
+                    start = i["storage_info"]["Gap"][0]
+                    storageNode = i["storage_info"]["storageNode"]
+                    
+                    print(storageNode)
+                    
                     message = {
                         "fName": i["fName"],
                         "FID" : self.obj.FID,
                         "cwd" : cwd,
-                        #"start":i["storage_info"]["Gap"][0],
-                        "start" : 0,
+                        "start" : start,
                         "command":"upload"
                     }
     
-                    storageNode = i["storage_info"]
-        
+                    
+
+                  
                     #TRY UPLOADING
                     try: 
+                        
                         sftp_tools.put(message,storageNode)
                     except Exception as e:
+                        print(e)
                         print("ERROR IN SFTP UPLOAD")
                         success = False
                         break
@@ -207,13 +220,16 @@ class raidPut(threading.Thread):
                     serverDButil.setRAIDtype(self.RAIDtype, self.obj.FID)
                     
                     
-                    
                     #RAID ID COUNTER
                     raid_id = 0
                     
                     
                     #CREATE DATABASE ENTRY FOR NEWLY UPLOADED FILES
                     for i in upload_list:
+                        
+                        start = i["storage_info"]["Gap"][0]
+                        storageNode = i["storage_info"]["storageNode"]
+                        
                         raid_id+=1
                         
                         #CREATE THE ENTRY
@@ -222,32 +238,14 @@ class raidPut(threading.Thread):
                             fName= i["fName"],
                             file=self.obj.file,
                             actualSize=os.path.getsize(os.path.join(cwd, i["fName"])),
-                            SID = i["storage_info"]["SID"],
+                            SID = storageNode["SID"],
                             RAIDtype = self.RAIDtype,
                             RAIDid = raid_id,
-                            #start = i["storage_info"]["Gap"][0],
-                            start = 0,
+                            start = start,
                             FID=self.obj.FID,)
 
-                    
-                    
-                    #UPDATE STORAGE NODE INFORMATION
-                    for i in upload_list:
-                        
-                        nodeSID = i["storage_info"]["SID"]
-                        #GET ALL FILES STORED IN THE STORAGE NODE
-                        files_in_node = serverDButil.get_all_files_by_sid(nodeSID)
-                        
-                        # print(files_in_node)
-                        #GET THE NEW MAXIMUM SIZE THAT CAN BE STORED ON THE STORAGE NODE
-                        # print(i["storage_info"]["maxSize"])
-                        
-                        
-                        newMaxSize = get_tools.getMaxFile(files_in_node, i["storage_info"]["allocSize"])
-                        
-                        # print(newMaxSize)
-                        #UPDATE THE STORAGE NODE INFORMATION ON THE DATA BASE
-                        #serverDButil.updateMaxSize(newMaxSize, nodeSID)
+                    shutil.rmtree(cwd)
+    
             
             
 

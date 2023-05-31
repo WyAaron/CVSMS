@@ -41,15 +41,8 @@ class thread_get(threading.Thread):
             shutil.rmtree(cwd)
             print("Some Storage Nodes are Down, Cannot download all the files in this RAID")
         else:
-        
-        
             #LOOP THROUGH ALL THE FILES 
             for fileMD in file_list:
-                # print(fileMD["RAIDid"])
-                
-                
-                
-                
                 if fileMD["RAIDid"] != -1:
                     storageNode = serverDButil.getStorageNode(fileMD["SID"])
                     
@@ -78,8 +71,6 @@ class thread_get(threading.Thread):
                         print(e)
                         print("ERROR DOWNLOADING FILES TO BE RAIDED")
                         success = False
-                        
-                        
                         break
                 else:
                     print("SKIPPED 1st ENTRY")
@@ -174,10 +165,14 @@ class thread_unraid(threading.Thread):
             
                 
                 storageNode = NodeGetTools.get_storage_nodes([fName], cwd)
-            
+
                 if storageNode:
+                    storageNode = storageNode[0]["storage_info"]
+                    #GET FILE START BYTE
                     start = storageNode["Gap"][0]
                     storageNode = storageNode["storageNode"]
+                    
+                   
                     
                     
                     message = {
@@ -192,7 +187,7 @@ class thread_unraid(threading.Thread):
                 
                     success = True
                     try: 
-                        storageNode = storageNode[0]["storage_info"]
+                       
                         sftp_tools.put(message, storageNode)
                         
                     except Exception as e:
