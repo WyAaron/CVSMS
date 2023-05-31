@@ -52,6 +52,7 @@ class thread_get(threading.Thread):
                 message = {
                     "fName": fileMD["fName"],
                     "FID" : fileMD["FID"],
+                    "size": fileMD["ActualSize"],
                     "command" : "download",
                     "cwd" : cwd
                     }
@@ -100,6 +101,7 @@ class thread_get(threading.Thread):
                 message = {
                     "fName": fileMD["fName"],
                     "FID" : fileMD["FID"],
+                    "size": fileMD["ActualSize"],
                     "command" : "download",
                     "cwd" : cwd
                     }
@@ -174,6 +176,7 @@ class thread_unraid(threading.Thread):
                 message = {
                     "fName": fileMD["fName"],
                     "FID" : fileMD["FID"],
+                    "size": fileMD["ActualSize"],
                     "command" : "download",
                     "cwd" : cwd
                     }
@@ -222,6 +225,7 @@ class thread_unraid(threading.Thread):
                 message = {
                     "fName": fileMD["fName"],
                     "FID" : fileMD["FID"],
+                    "size": fileMD["ActualSize"],
                     "command" : "download",
                     "cwd" : cwd
                     }

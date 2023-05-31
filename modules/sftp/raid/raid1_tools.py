@@ -53,6 +53,7 @@ class thread_get(threading.Thread):
             "fName": fileMD["fName"],
             "FID" : fileMD["FID"],
             "command" : "download",
+            "size": fileMD["ActualSize"],
             "cwd" : cwd
             }
                     

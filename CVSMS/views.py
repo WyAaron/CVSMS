@@ -116,11 +116,16 @@ def file_Upload_view(request):
             fName= request.FILES["file"],
             actualSize=request.FILES["file"].size,
             isCached=False)
-
+            
+            
+            #print(request.FILES["file"].name)
+            
             serverDButil.addFID(obj.id, obj.id)
     
             obj = Files.objects.get(id=obj.id)
             obj.file = request.FILES['file']
+            
+            
             obj.save()
             
             FID = obj.id
@@ -145,6 +150,7 @@ def file_Upload_view(request):
                 "fName": fName,
                 "FID" : FID,
                 "cwd" : cwd,
+                "size": obj.ActualSize,
                 "start" :start,
                 "command":"upload"
                 }
@@ -211,6 +217,7 @@ def file_Retreive_view(request,id):
                 "FID" : obj.FID,
                 "cwd" : cwd,
                 "command":"download",
+                "size": obj.ActualSize,
                 "RAIDtype": obj.RAIDtype
                 }
             thread = thread_sftp.standard_get(message, fName, storageNode)

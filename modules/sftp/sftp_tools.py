@@ -19,12 +19,7 @@ def put(message,storageNode):
         s.connect((host,port))
         
         #GENERATE COMMAND MESSAGE FOR STORAGE NODE 
-        messageToNode= {
-            "fName": fName,
-            "FID" : fID,
-            "command" : message["command"],
-            "cwd" : message["cwd"]
-            }
+        messageToNode= message
         
         #SEND COMMAND TO STORAGE NODE
         messageToNode = json.dumps(messageToNode)
@@ -33,19 +28,48 @@ def put(message,storageNode):
         
             
         print("Storage Node is downloading...")
+        s.settimeout(10)
         
-        #WAIT FOR STORAGE NODE TO FINISH DOWNLOADING
-        data = s.recv(1024)
-        data = data.decode()
-        #DELETE FILE AFTER STORAGE NODE FINISH DOWNLOADING
-        if data:
-            # data = json.loads(data)
-            # serverDButil.updateMaxSize(data["maxSize"], storageNode["SID"])
-            # serverDButil.updateFileStartMD(data["start"], fID)
-            print("Storage Node successful download")
+        
+        
+        #STORAGE NODE HEARTBEAT
+        while True:
             
-            #os.remove(os.path.join(message["cwd"],fName))
+            data = s.recv(1024)
+            data = data.decode()
+            
+            
+            #DELETE FILE AFTER STORAGE NODE FINISH DOWNLOADING
+            if data == "done":
+                print("Storage Node Successful Download")
+                
+                message = str("recvd").encode()
+                s.sendall(message)
+                break
+            
+            elif data == "downloading":
+                print("Storage Node is Still downloading...")
+                message = str("recvd").encode()
+                s.sendall(message)
+            
+            elif data == "storing":
+                print("Storage node is writing file in storage node...")    
+                message = str("recvd").encode()
+                s.sendall(message)
+                
+            else:
+                message = str("recvd").encode()
+                print(message)
+                s.sendall(message)
+                raise Exception("FAILED UPLOAD")
+            
+            
+            
 
+            
+        print("SFTP OPERATION FINISHED")
+            
+            
 def get(message,storageNode):
     host = storageNode["IP"]
     port = storageNode["port"]
@@ -80,44 +104,6 @@ def get(message,storageNode):
             print("Storage Node successful upload")
             
                 
-        else:
-            print("ERROR FROM STORANGE NODE UPLOAD")
-
-
-def delete(message,storageNode, isRaid = False):
-    host = storageNode["IP"]
-    port = storageNode["port"]
-    
-    fID = message["FID"]
-    
-    #CONNECT TO STORAGE NODE
-    with socket.socket(socket.AF_INET, socket.SOCK_STREAM)as s:
-        s.connect((host,port))
-        
-        #GENERATE COMMAND MESSAGE FOR STORAGE NODE 
-        message = {
-                "FID" : fID,
-                "command" : message["command"],
-                }
-        message = json.dumps(message)
-        message = message.encode()    
-        s.sendall(message)
-        
-        print("Storage Node is Deleteing")
-        
-        #WAIT FOR STORAGE NODE's REPLY THAT IT IS DONE UPLOADING
-        data = s.recv(1024)
-        data = data.decode()
-        
-        #ONCE STORAGE NODE IS DONE UPLOADING 
-        #INFORM USER THAT UPLOADING IS DONE AND FILE THE CAN BE DOWNLOADED
-        if data:
-            data = json.loads(data)
-            if not isRaid:
-                serverDButil.delMD([fID])
-            print(fID)
-            serverDButil.updateMaxSize(data["maxSize"], storageNode["SID"])
-            print("Storage Node successful delete")
         else:
             print("ERROR FROM STORANGE NODE UPLOAD")
 

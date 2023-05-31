@@ -24,18 +24,27 @@ class SFTPThread(threading.Thread):
     # override the run function
     def run(self):
         # TODO: Change to SFTP function
-        if self.message["command"] == "upload":
-            print(self.storageNode["port"])
-            sftp_tools.put(self.message, self.storageNode)
-            if self.deleteFolder:
-                pass
-                #shutil.rmtree(self.message["cwd"])
-        elif self.message["command"] == "download":
-            sftp_tools.get(self.message, self.storageNode)
-
-        else:
-            print("NOT YET IMPLEMENTED")
-            #delete(self.message, self.storageNode)
+        
+            #UPLOAD COMMAND
+            if self.message["command"] == "upload":
+                print(self.storageNode["SID"])
+                try:
+                    sftp_tools.put(self.message, self.storageNode)
+                
+                #CHECK IF THERE ARE ANY ERRORS IN THE FILE UPLOAD
+                except Exception as e:
+                    print(e)
+                    print("ERROR IN FILE UPLOAD")
+                    serverDButil.delMD(self.message["FID"])
+                
+                #REMOVE FILE FROM LOCAL STORAGE AFTER DOWNLOAD
+                shutil.rmtree(self.message["cwd"])
+            
+            #DOWNLOAD COMMAND
+            elif self.message["command"] == "download":
+                sftp_tools.get(self.message, self.storageNode)
+                
+       
           
             
 class standard_get(threading.Thread):
@@ -55,14 +64,14 @@ class standard_get(threading.Thread):
         # for i in self.fileTuple:
             
         #     if i != "NONE":
-        message = {
-        "fName": self.fName,
-        "FID" : self.message["FID"],
-        "cwd" : self.message["cwd"],
-        "command":"download"
-        }
+        # message = {
+        # "fName": self.fName,
+        # "FID" : self.message["FID"],
+        # "cwd" : self.message["cwd"],
+        # "command":"download"
+        # }
         
-        get_Thread = SFTPThread(message, self.storageNode)
+        get_Thread = SFTPThread(self.message, self.storageNode)
         get_Thread.start()
     
     
