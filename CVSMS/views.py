@@ -133,10 +133,10 @@ def file_Upload_view(request):
             
             obj.save()
             
-            fName = obj.fName
             FID = obj.id
             
             cwd = os.path.dirname(obj.file.path)
+            fName = os.listdir(cwd)[0]
             
             
 
