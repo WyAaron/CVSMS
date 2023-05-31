@@ -128,29 +128,35 @@ def file_Upload_view(request):
             
             obj.save()
             
+            fName = obj.fName
             FID = obj.id
             
             cwd = os.path.dirname(obj.file.path)
-            fName = os.listdir(cwd)[0]
+            
             
 
             
             storageNode = NodeGetTools.get_storage_nodes([fName], cwd)
             
             
-            #GET FILE START BYTE
-            #start = storageNode[0]["Gap"][0]
-            start = 0
             
-            obj.start = start
-            obj.save()
-            #SET FILE START BYTE
-            #serverDButil.setFileStart(start, FID)
+    
             
             if storageNode:
-                
                 storageNode = storageNode[0]["storage_info"]
+                #GET FILE START BYTE
+                start = storageNode["Gap"][0]
+
+                #SET THE START BYTE IF THE FILE
+                obj.start = start
+                obj.save()
+                
+                print(start)
+                
+                storageNode = storageNode["storageNode"]
                 serverDButil.addStorageNode(storageNode["SID"],FID)
+                
+                
                 message = {
                 "fName": fName,
                 "FID" : FID,
@@ -171,9 +177,11 @@ def file_Upload_view(request):
                     #Todo Function when false it must delete file from db 
                     print(e)
                     serverDButil.delMD(FID)
+                    shutil.rmtree(cwd)
             else:
                 serverDButil.delMD(FID)
-                messages.info(request,"There is no more space")
+                shutil.rmtree(cwd)
+                messages.info(request,"There is not enough space")
             
 
             

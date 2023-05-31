@@ -136,7 +136,7 @@ class thread_unraid(threading.Thread):
                     "fName": fileMD["fName"],
                     "FID" : fileMD["FID"],
                     "size": fileMD["actualSize"],
-                    "start" : fileMD ["start"],
+                    "start" : fileMD["start"],
                     "command" : "download",
                     "cwd" : cwd
                     }
@@ -176,14 +176,16 @@ class thread_unraid(threading.Thread):
                 storageNode = NodeGetTools.get_storage_nodes([fName], cwd)
             
                 if storageNode:
+                    start = storageNode["Gap"][0]
+                    storageNode = storageNode["storageNode"]
+                    
                     
                     message = {
                         "fName": fName,
                         "FID" : self.obj.FID,
                         "cwd" : cwd,
-                        #"start" : storageNode[0]["Gap"][0],
                         "size" : self.obj.actualSize,
-                        "start" : 0,
+                        "start" : start,
                         "command":"upload"
                     }
                     

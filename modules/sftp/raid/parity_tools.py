@@ -268,12 +268,15 @@ class thread_unraid(threading.Thread):
                 
                 if storageNode:
                     
+                    start = storageNode["Gap"][0]
+                    storageNode = storageNode["storageNode"]
+                    
+                    
                     message = {
                         "fName": fName,
                         "FID" : self.obj.FID,
                         "cwd" : cwd,
-                        #"start" : storageNode[0]["Gap"][0],
-                        "start" : 0,
+                        "start" : start,
                         "command":"upload"
                     }
                     
@@ -304,8 +307,7 @@ class thread_unraid(threading.Thread):
                         file = self.obj.file,
                         actualSize = self.obj.actualSize,
                         FID = self.obj.FID,
-                        #start = storageNode[0]["Gap"][0],
-                        start = 0,
+                        start = start,
                         isCached = False,
                         SID = storageNode["SID"])
                     

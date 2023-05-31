@@ -71,77 +71,80 @@ def get_storage_nodes(partNames,cwd):
     
     allNodes = serverDButil.getAllStorageNodes()
     file_and_node_tuple_list = []
-    # file_and_node_tuple_list = []
-    # for partName in partNames:
-
-    #     file_size = os.path.getsize(os.path.join(cwd, partName))
-        
-    #     storage_node = None
-        
-    #     for storage_node in allNodes:
-            
-    #         #SKIP THE NODE IF THE NODE IS OFFLINE OR IF THE NODE HAS A SMALLER MAXIMUM SIZE THAT CAN BE STORED
-    #         if storage_node["status"] == False:
-    #             continue
-    #         elif storage_node["maxSize"] < file_size:
-    #             continue
-            
-    #         files_in_node = serverDButil.get_all_files_by_sid(storage_node["SID"])
-    ##         node_allocated_size = serverDButil.get_all_files_by_sid(storage_node["allocSize"])
-    #         gap_list = fragmentCheck(files_in_node, node_allocated_size)
-            
-            
-    #         #FIND THE SMALLES SPACE IN THE NODE
-    #         newSmallestSpace = None
-    #         for space in gap_list:
-    #             if space[1]-space[0] >= file_size:
-    #                 #CHECK IF THE NEW FOUND SPACE IS SMALLER THAN THE PREVIOUS SPACE
-    #                 if newSmallestSpace is None or space[1]-space[0] < smallestSpaceBetween:
-    #                     newSmallestSpace = space
-    #                     smallestSpaceBetween = space[1]-space[0]
-            
-    #         #CHECK IF NEW FOUND SPACE IN THE NEW NODE IS SMALLER THAN PREVIOUSLY FOUND SPACE            
-    #         if smallestSpaceBetween is None or (newSmallestSpace[1] - newSmallestSpace[0]) < (storage_node["Gap"][0] - storage_node["Gap"][1]):  
-    #             storage_node = {"storageNode": storage_node , "Gap": newSmallestSpace}
-        
-    #     #IF THERE WAS NO NODE FOUND END FUNCTION AND RETURN NONE
-    #     if storage_node == None:
-    #         return None
-        
-    #     file_and_node_tuple_list.append({"fName":partName, 
-    #                                      "storage_info":storage_node})
-
-    #     #REMOVE SELECTED NODE FROM THE LIST OF POSSIBLE NODES
-    #     allNodes = [item for item in allNodes if item["SID"] != storage_node["SID"]]
-
-    
-    # return file_and_node_tuple_list
-            
     file_and_node_tuple_list = []
     for partName in partNames:
 
         file_size = os.path.getsize(os.path.join(cwd, partName))
         
-        storageNode = None
+        to_up_storage_node = None
         
-        for node in allNodes:
+        for storage_node in allNodes:
             
-            if node["status"] == False:
+            #SKIP THE NODE IF THE NODE IS OFFLINE OR IF THE NODE HAS A SMALLER MAXIMUM SIZE THAT CAN BE STORED
+            if storage_node["status"] == False:
                 continue
-            elif node["maxSize"] < file_size:
+            elif storage_node["maxSize"] < file_size:
                 continue
-            if node["maxSize"] >= file_size:
-                storageNode = node
+            
+          
+            files_in_node = serverDButil.get_all_files_by_sid(storage_node["SID"])
+      
+            node_allocated_size = storage_node["allocSize"]
+            gap_list = fragmentCheck(files_in_node, node_allocated_size)
+            
+            
+            #FIND THE SMALLES SPACE IN THE NODE
+            newSmallestSpace = None
+            for space in gap_list:
+                
+                if (space[1]- space[0]) >= file_size:
+                    #CHECK IF THE NEW FOUND SPACE IS SMALLER THAN THE PREVIOUS SPACE
+                    if newSmallestSpace is None or space[1]-space[0] < smallestSpaceBetween:
+                        newSmallestSpace = space
+                        smallestSpaceBetween = space[1]-space[0]
+            
+            #CHECK IF NEW FOUND SPACE IN THE NEW NODE IS SMALLER THAN PREVIOUSLY FOUND SPACE            
+            if to_up_storage_node is None or (newSmallestSpace[1] - newSmallestSpace[0]) < (to_up_storage_node["Gap"][0] - to_up_storage_node["Gap"][1]):  
+                to_up_storage_node = {"storageNode": storage_node , "Gap": newSmallestSpace}
+        
+        #IF THERE WAS NO NODE FOUND END FUNCTION AND RETURN NONE
+        if to_up_storage_node == None:
+            return None
+        
+        file_and_node_tuple_list.append({"fName": partName, 
+                                         "storage_info":to_up_storage_node})
+
+        #REMOVE SELECTED NODE FROM THE LIST OF POSSIBLE NODES
+        allNodes = [item for item in allNodes if item["SID"] != storage_node["SID"]]
+
+    
+    return file_and_node_tuple_list
+            
+    # file_and_node_tuple_list = []
+    # for partName in partNames:
+
+    #     file_size = os.path.getsize(os.path.join(cwd, partName))
+        
+    #     storageNode = None
+        
+    #     for node in allNodes:
+            
+    #         if node["status"] == False:
+    #             continue
+    #         elif node["maxSize"] < file_size:
+    #             continue
+    #         if node["maxSize"] >= file_size:
+    #             storageNode = node
       
             
-        if storageNode == None:
-            return None
+    #     if storageNode == None:
+    #         return None
             
-        allNodes = [item for item in allNodes if item["SID"] != storageNode["SID"]]
-        file_and_node_tuple_list.append({"fName":partName, 
-                                          "storage_info":storageNode})
+    #     allNodes = [item for item in allNodes if item["SID"] != storageNode["SID"]]
+    #     file_and_node_tuple_list.append({"fName":partName, 
+    #                                       "storage_info":storageNode})
         
-    return file_and_node_tuple_list
+    # return file_and_node_tuple_list
     
 
             
