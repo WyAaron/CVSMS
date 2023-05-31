@@ -2,13 +2,12 @@
 
 <h1> Server </h1>
 
-1. after importing run: python -m venv venv 
-2. Activate the virtual environment by running:  Windows:  ".venv\scripts\activate" / Linux/MAC: 'source bin/scripts/activate'
-3. To run "python 3 manage.py runserver <ipaddr>:<port>
-4. create a admin: "python3 manage.py createsuperuser"
-5. py manage.py makemigrations 
-6. py manage.py migrate
-7. py manage.py runserver *Ipadd*:*PORT* --noreload #This is for production stage#
+1. pip install django 
+2. pip install numpy 
+3. pip install paramiko 
+4. Edit SerConMod.py
+5. Run python3 make migrate & migrate
+6. python3 manage.py runserver *IPADDR:8000* --noreload
   
  
 <h1> Client </h1>
