@@ -150,7 +150,7 @@ def file_Upload_view(request):
                 "fName": fName,
                 "FID" : FID,
                 "cwd" : cwd,
-                "size": obj.ActualSize,
+                "size": obj.actualSize,
                 "start" :start,
                 "command":"upload"
                 }
@@ -217,7 +217,7 @@ def file_Retreive_view(request,id):
                 "FID" : obj.FID,
                 "cwd" : cwd,
                 "command":"download",
-                "size": obj.ActualSize,
+                "size": obj.actualSize,
                 "RAIDtype": obj.RAIDtype
                 }
             thread = thread_sftp.standard_get(message, fName, storageNode)
