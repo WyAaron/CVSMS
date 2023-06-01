@@ -80,6 +80,7 @@ def main():
     with open(os.path.join(os.getcwd(),"Config.json"), 'r', encoding='utf-8-sig') as f:
             config = json.loads(f.read())  
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as client: 
+        client.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         client.bind((config["storageIP"],config["storagePort"]))
         client.connect((config["serverIP"],config["serverPort"]))
         print(f'Registration status: {config["Registered"]}')

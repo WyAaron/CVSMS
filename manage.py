@@ -44,14 +44,14 @@ def main():
 
 if __name__ == '__main__':
     
-    # main()
-    t1 = multiprocessing.Process(target=main)
-    t1.start()
+    main()
+    # t1 = multiprocessing.Process(target=main)
+    # t1.start()
     
-    t2 = multiprocessing.Process(target=SerConMod.main)
-    t2.start()
+    # t2 = multiprocessing.Process(target=SerConMod.main)
+    # t2.start()
 
-    t1.join()
-    t2.join()
+    # t1.join()
+    # t2.join()
     
     
