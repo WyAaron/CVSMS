@@ -40,6 +40,7 @@ class storageNodeInfo(models.Model):
     port = models.IntegerField()
     maxSize = models.IntegerField(null=True)
     status = models.BooleanField(default=False)
+    SFTPport = models.IntegerField()
 
 
 

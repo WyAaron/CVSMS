@@ -9,6 +9,8 @@ from .models import *
 #     list_display = ['FID', 'fileName']
 class FileAdmin(admin.ModelAdmin): 
     list_display = ['owner','id','fName','file','RAIDtype','SID']
+class StorageInfoAdmin(admin.ModelAdmin): 
+    list_display = ["SID", "AllocSize","SFTPport", "IP","port", ]
 
 # admin.site.register(fileMetadata,CVSMSAdmin)
 admin.site.register(Files,FileAdmin)

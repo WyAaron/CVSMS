@@ -50,7 +50,6 @@ GB = 2 ** 30
 
 thread_crashed = False
 
-file_module.CreateAlloc(1*GB,"storage")
 # storageNodeMD.createMD()
 
 
@@ -66,9 +65,11 @@ def Registration(client,config):
     try:
         Register ={
                 "SID": config["SID"], 
-                "allocSize": config["AllocSize"], 
+                ### Multiplying the allocated size to GB 
+                "allocSize": config["AllocSize"]* GB, 
                 "storageIp": config["storageIP"], 
                 "storagePort":config["storagePort"],
+                "SFTPport":config["SFTPport"],
                 "command": "Register"
             }
         Register.update()
@@ -79,6 +80,9 @@ def Registration(client,config):
             config["Registered"] = True
             json.dump(config,f)
             f.close()
+        file_module.CreateAlloc((config["AllocSize"] * GB),"storage")
+        print(f' total Size {config["AllocSize"] * GB}')
+        client.close()
     except Exception as e: 
         print(repr(e))
 
@@ -120,30 +124,7 @@ def Heartbeat(client,config):
 
 
 
-def StorageNodeConnection(): 
-    bufferSize = 1024 
-    with open(os.path.join(os.getcwd(),"Config.json"), 'r', encoding='utf-8-sig') as f:
-            config = json.loads(f.read())  
-    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as client: 
-        client.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        client.bind((config["storageIP"],config["storagePort"]))
-        client.connect((config["serverIP"],config["serverPort"]))
-        print(f'Registration status: {config["Registered"]}')
-        try:
-            if config["Registered"]: 
-                print('registered!')
-                #reconnecting()
-            else:
-                print(f'Registration')
-                Registration(client,config)
-                #---- insert heartbeat----#
-            
-            
-                
-            Heartbeat(client,config) 
-                
-        except Exception as e:
-            print(repr(e))
+
 
 
 
@@ -340,7 +321,7 @@ def main(host, port, serverName, password):
                         #exit()
                         with paramiko.SSHClient() as ssh:
                             ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-                            ssh.connect(hostname=addr[0], username=serverName, password="password", port=22)
+                            ssh.connect(hostname=addr[0], username=serverName, password=password, port=22)
                             #CONNECT TO SERVER
                             with ssh.open_sftp() as sftp_client:
                                 sftp_client.chdir(message["cwd"])
@@ -471,6 +452,7 @@ def main(host, port, serverName, password):
             
         
         
+        
 # if __name__ == "__main__":
 #     host = "192.168.0.213"
 #     port = 5004
@@ -484,17 +466,46 @@ def main(host, port, serverName, password):
 
 
 
-if __name__ == "__main__":
-            
-            with open(os.path.join(os.getcwd(),"Config.json"), 'r', encoding='utf-8-sig') as f:
-                config = json.loads(f.read())  
-            
-            
-            p1 = multiprocessing.Process(target=main,args=(config["storageIP"],config["storagePort"],config["username"],config["password"]))
-            p1.start()
-            
-            p2 = multiprocessing.Process(target=StorageNodeConnection)
-            p2.start()
 
-            p1.join()
-            p2.join()
+        
+
+
+
+if __name__ == "__main__":
+
+    
+    with open(os.path.join(os.getcwd(),"Config.json"), 'r', encoding='utf-8-sig') as f:
+            config = json.loads(f.read())  
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as client: 
+        client.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        client.bind((config["storageIP"],config["storagePort"]))
+        print(f'serverIP, port = {config["serverIP"],config["serverPort"]}')
+        client.connect((config["serverIP"],config["serverPort"]))
+        
+        while True:
+            print(f'Registration status: {config["Registered"]}')
+            try:
+                if config["Registered"]: 
+                    print('registered!')
+                    #reconnecting()
+                else:
+                    print(f'{type(config["AllocSize"])}')
+                    
+                    Registration(client,config)
+                    #---- insert heartbeat----#
+                # Heartbeat(client,config)
+                # SFTP(client,config)
+                #p1 = multiprocessing.Process(target=Heartbeat,args=(client, config,))
+                #p1.start()
+                
+                p2 = multiprocessing.Process(target=main,args=(config["storageIP"], config["storagePort"],config["username"],config["password"]))
+                p2.start()
+                
+
+                #p1.join()
+                p2.join()
+            except Exception as e:
+                print(repr(e))
+            
+    
+    
