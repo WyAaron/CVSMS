@@ -40,6 +40,7 @@ import shutil
 import threading
 import time
 from datetime import datetime 
+import multiprocessing
 #from RetrieveFile import *
 
 # Setup to easily reuse byte sizes
@@ -81,8 +82,7 @@ def Registration(client,config):
     except Exception as e: 
         print(repr(e))
 
-def StorageNodeConnection(): 
-    pass
+
 
 def Heartbeat(client,config):
     ctr=0 
@@ -120,6 +120,30 @@ def Heartbeat(client,config):
 
 
 
+def StorageNodeConnection(): 
+    bufferSize = 1024 
+    with open(os.path.join(os.getcwd(),"Config.json"), 'r', encoding='utf-8-sig') as f:
+            config = json.loads(f.read())  
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as client: 
+        client.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        client.bind((config["storageIP"],config["storagePort"]))
+        client.connect((config["serverIP"],config["serverPort"]))
+        print(f'Registration status: {config["Registered"]}')
+        try:
+            if config["Registered"]: 
+                print('registered!')
+                #reconnecting()
+            else:
+                print(f'Registration')
+                Registration(client,config)
+                #---- insert heartbeat----#
+            
+            
+                
+            Heartbeat(client,config) 
+                
+        except Exception as e:
+            print(repr(e))
 
 
 
@@ -447,13 +471,30 @@ def main(host, port, serverName, password):
             
         
         
+# if __name__ == "__main__":
+#     host = "192.168.0.213"
+#     port = 5004
+#     serverName = "thesis-ssh"
+#     password = "password"
+#     while True:
+#         try:
+#             main(host, port, serverName, password)
+#         except Exception as e:
+#             print(e)
+
+
+
 if __name__ == "__main__":
-    host = "192.168.0.213"
-    port = 5004
-    serverName = "thesis-ssh"
-    password = "password"
-    while True:
-        try:
-            main(host, port, serverName, password)
-        except Exception as e:
-            print(e)
+            
+            with open(os.path.join(os.getcwd(),"Config.json"), 'r', encoding='utf-8-sig') as f:
+                config = json.loads(f.read())  
+            
+            
+            p1 = multiprocessing.Process(target=main,args=(config["storageIP"],config["storagePort"],config["username"],config["password"]))
+            p1.start()
+            
+            p2 = multiprocessing.Process(target=StorageNodeConnection)
+            p2.start()
+
+            p1.join()
+            p2.join()
