@@ -15,7 +15,7 @@ def getCurrTime():
 def storageRegister(data): 
     conn = sqlite3.connect("db.sqlite3")
     c = conn.cursor()                                                                           #{}
-    c.execute("INSERT INTO CVSMS_storageNodeInfo VALUES (?,?,?,?,?,?,?)",(None,data["SID"],data["allocSize"],data["storageIp"],data["storagePort"],data["allocSize"],True))
+    c.execute("INSERT INTO CVSMS_storageNodeInfo VALUES (?,?,?,?,?,?,?,?)",(None,data["SID"],data["allocSize"],data["storageIp"],data["storagePort"],data["allocSize"],True,data['SFTPport']))
     conn.commit()
     print(f'{data["SID"]} - {data["storageIp"]} inserted at table')
     conn.close()
@@ -74,7 +74,7 @@ def StorageConnection(conn,addr):
             print(repr(e))
             break
 def main(): 
-    IP= "192.168.100.70"
+    IP= "192.168.100.72"
     PORT= 5000
     
     

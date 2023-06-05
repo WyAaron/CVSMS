@@ -234,7 +234,7 @@ def main(host, port, serverName, password):
                             sftp_client.chdir(message["cwd"])
                             #UPLOAD TO SERVER
                             sftp_client.put( os.path.join(str(message["FID"]),message["fName"]), message["fName"])
-                        ssh.close()
+                        # ssh.close()
                     except Exception as e:
                             print(e)
                             thread_crashed = True

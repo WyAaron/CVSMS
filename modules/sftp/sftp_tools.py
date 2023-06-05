@@ -9,7 +9,7 @@ import time
 
 def put(message,storageNode):
     host = storageNode["IP"]
-    port = storageNode["port"]
+    port = storageNode["SFTPport"] # port = heartbeat SFTPport = SFTP server to client 
     
     fName = message["fName"]
     fID = message["FID"]
@@ -48,12 +48,13 @@ def put(message,storageNode):
                 print("Storage Node is downloading...")
                 message = str("recvd").encode()
                 s.sendall(message)
+
             
             elif data == "storing":
                 print("Storage node is writing file in storage node...")    
                 message = str("recvd").encode()
                 s.sendall(message)
-                
+
             else:
                 message = str("recvd").encode()
                 print(message)
@@ -69,7 +70,7 @@ def put(message,storageNode):
             
 def get(message,storageNode):
     host = storageNode["IP"]
-    port = storageNode["port"]
+    port = storageNode["SFTPport"]
     
     #CONNECT TO STORAGE NODE
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM)as s:

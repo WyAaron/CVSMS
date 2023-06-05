@@ -99,7 +99,7 @@
     {% for file in file_list %} 
     <tr>
         
-        <th scope="row">{{file.fileName}}</th>
+        <th scope="row">{{file.fName}}</th>
         <td> {{file.actualSize | filesizeformat }} </td>
                                                             
             <td>  <a class="download-link" href="{% url 'file-retrieve' file.id  %}" > 	<i class="bi bi-cloud-download"   ></i></a>  </td>
