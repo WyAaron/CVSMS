@@ -21,12 +21,13 @@
 {% for storageNode in storageNodes %}
     <p> {{storageNode.SID}} - 
         {% if storageNode.status == False %}
-         &#10005
+         Inactive
         {% else %}
-        &#10004
+         Active
         {% endif %}
          </p>
 {% endfor %}
+<br>
 <h5>Total Storage Size: {{totalFileSize | filesizeformat}}  / {{storageSize | filesizeformat}} </h5>
 <table class="table">
     
@@ -35,7 +36,7 @@
             <th scope="col" >Owner</th>
             <th scope="col">File Name</th>
             <th scope="col">Size</th>
-            <th scope="col">Downlad</th>
+            <th scope="col">Download</th>
             <th scope="col">Delete </th>
             <th scope="col" >RAID TYPE</th>
             <th scope="col" >Storage </th>
@@ -52,7 +53,7 @@
         <td>{{file.fName}}</td>
         <td> {{file.actualSize | filesizeformat }} </td>
         <td>            
-            <a class="download-link" href="{% url 'file-retrieve' file.id  %}" > 	<i class="bi bi-cloud-download"   ></i></a>  </td>
+            <a class="download-link" id="center" href="{% url 'file-retrieve' file.id  %}" > 	<i class="bi bi-cloud-download"   ></i></a>  </td>
         <td><a href="{% url 'file-delete' file.id   %}"><i class="bi bi-trash3"></i></a></td>
         
         <!-- For RAID type -->

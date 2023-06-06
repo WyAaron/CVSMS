@@ -66,7 +66,16 @@
                 -webkit-box-shadow: 2px 2px 13px -4px rgba(0, 0, 0, 0.21);
                 box-shadow: 2px 2px 13px -4px rgba(0, 0, 0, 0.21);
             }
+            .logout {
+                padding-left: 650px;
+            
+            }
+            #center {
+                align-items: center;
+            }
         </style>
+
+        
 
     </head>
     <body>
@@ -74,15 +83,16 @@
         
 
         <div class="header-bar">
-            <div>
+            <div >
                 {% if request.user.is_authenticated %}
                 <h1> <a href="/">Welcome {{request.user}} to  CVSMS</a> </h1>
                 {% if request.user.is_superuser %}
                 <a href="{% url 'user' %}"> Users</a> |
                 <a href="{% url 'get-statusOfNodes' %}">Node Status |</a>
                 {% endif %}
-                <a href="{% url 'file-upload' %}"> upload File</a> |
-                <a href="{% url 'logout'  %}">Logout</a> 
+                <a href="{% url 'file-upload' %}"> Upload File</a> 
+                &nbsp; 
+                <a class="logout" href="{% url 'logout'  %}">Logout</a> 
                     
                 {% else %}
                 <h1> <a href="/">Welcome to CVSMS</a> </h1>
