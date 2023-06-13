@@ -3,12 +3,12 @@ from django.shortcuts import render, redirect
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import UserCreationForm
-from CVSMS.models import  Files,storageNodeInfo
-from .forms import FileForm,RAIDForm
+from CVSMS.models import Files, storageNodeInfo
+from .forms import FileForm, RAIDForm
 from django.contrib.auth.models import User
 from django.shortcuts import get_object_or_404
 
-import os 
+import os
 from django.http import HttpResponse
 from django.contrib import messages
 
@@ -17,95 +17,86 @@ import shutil
 import threading
 
 
-
-
 from django.db import models
 
 # Cr = "eate your views here.
 
 
+# MODULE IMPORTS
 
-#MODULE IMPORTS
-
-import modules.view.view_tools as view_tools 
+import modules.view.view_tools as view_tools
 
 import modules.RAIDmod as RAIDmod
 import modules.sqlite3.serverDButil as serverDButil
 import modules.nodeTools.getTools as NodeGetTools
 
-#SFTP INITIALIZATION TOOLS, INCLUDES THREADING
+# SFTP INITIALIZATION TOOLS, INCLUDES THREADING
 import modules.sftp.sftp_tools as sftp_tools
 
-#MODULES FOR RAIDING FILES AND INITIATING ITS SFTP
+# MODULES FOR RAIDING FILES AND INITIATING ITS SFTP
 import modules.sftp.thread_sftp as thread_sftp
 import modules.sftp.raid.raid0_tools as raid0_tools
 import modules.sftp.raid.raid1_tools as raid1_tools
 import modules.sftp.raid.parity_tools as parity_tools
-#-----------------------------
-
-
-
+# -----------------------------
 
 
 # Home view of user
 @login_required
-def home_view(request): 
+def home_view(request):
     view_tools.get_AvailabilityInCache()
-    user = request.user 
-    if user.is_superuser: 
+    user = request.user
+    if user.is_superuser:
         context = {
-        "file_list": Files.objects.filter(RAIDid = -1) , 
-        #"file_list": Files.objects.all() ,
-        'storageSize': view_tools.get_storageSize(),
-        'totalFileSize': view_tools.get_fileTotalSize(),
-        'storageNodes' : storageNodeInfo.objects.all()
-        
-    }
+            "file_list": Files.objects.filter(RAIDid=-1),
+            # "file_list": Files.objects.all() ,
+            'storageSize': view_tools.get_storageSize(),
+            'totalFileSize': view_tools.get_fileTotalSize(),
+            'storageNodes': storageNodeInfo.objects.all()
+
+        }
     else:
         context = {
-            "file_list": Files.objects.filter(owner=request.user,RAIDid = -1),
+            "file_list": Files.objects.filter(owner=request.user, RAIDid=-1),
         }
-    
-        
-    return  render(request,'home-view.html',context=context) 
- 
 
-#TODO: dashboard for admin
+    return render(request, 'home-view.html', context=context)
+
+
+# TODO: dashboard for admin
 
 @login_required
-# def CVSMS_detailed_view(request,id): 
+# def CVSMS_detailed_view(request,id):
 #     file_obj = None
-#     if id is not None: 
+#     if id is not None:
 #         file_obj = fileMetadata.objects.get(id=id)
 #         context = {
-#             "object": file_obj, 
+#             "object": file_obj,
 #         }
-
-    # return render(request, 'detail.html', context=context)
-
+# return render(request, 'detail.html', context=context)
 @login_required
 def fileSearch_view(request):
-    query_dict =  request.GET 
+    query_dict = request.GET
     query = query_dict.get('q')
-    
-    try: 
+
+    try:
         query = int(query_dict.get('q'))
-    except: 
+    except:
         query = None
     file_obj = None
-    if query is not None: 
+    if query is not None:
         file_obj = Files.objects.get(id=query)
-    context ={
+    context = {
         "object": file_obj
     }
     return render(request, 'search.html', context=context)
 
+    # block for a moment
+    # display a message
 
-            
-        # block for a moment
-        # display a message
-        
-#### Uploading of file
+# Uploading of file
+
+
 @login_required
 def file_Upload_view(request):
     context = {
@@ -114,132 +105,114 @@ def file_Upload_view(request):
     if request.method == "POST":
         form = FileForm(request.POST, request.FILES)
         if form.is_valid():
-            
+
             # # #TODO CONNECTED STORAGE NODES
             obj = Files.objects.create(
-            owner=request.user, 
-            fName= request.FILES["file"],
-            actualSize=request.FILES["file"].size,
-            isCached=False)
-            
-            
-            #print(request.FILES["file"].name)
-            
+                owner=request.user,
+                fName=request.FILES["file"],
+                actualSize=request.FILES["file"].size,
+                isCached=False)
+
+            # print(request.FILES["file"].name)
+
             serverDButil.addFID(obj.id, obj.id)
-    
+
             obj = Files.objects.get(id=obj.id)
             obj.file = request.FILES['file']
-            
-            
+
             obj.save()
-            
+
             FID = obj.id
-            
+
             cwd = os.path.dirname(obj.file.path)
             fName = os.listdir(cwd)[0]
-            
-            
 
-            
             storageNode = NodeGetTools.get_storage_nodes([fName], cwd)
-            
-            
-            
-    
-            
+
             if storageNode:
                 storageNode = storageNode[0]["storage_info"]
-                #GET FILE START BYTE
+                # GET FILE START BYTE
                 start = storageNode["Gap"][0]
 
-                #SET THE START BYTE IF THE FILE
+                # SET THE START BYTE IF THE FILE
                 obj.start = start
                 obj.save()
-                
+
                 print(start)
-                
+
                 storageNode = storageNode["storageNode"]
-                serverDButil.addStorageNode(storageNode["SID"],FID)
-                
-                
+                serverDButil.addStorageNode(storageNode["SID"], FID)
+
                 message = {
-                "fName": fName,
-                "FID" : FID,
-                "cwd" : cwd,
-                "size": obj.actualSize,
-                "start" :obj.start,
-                "command":"upload"
+                    "fName": fName,
+                    "FID": FID,
+                    "cwd": cwd,
+                    "size": obj.actualSize,
+                    "start": obj.start,
+                    "command": "upload"
                 }
-                
+
                 try:
-                    
-                    t1 = thread_sftp.SFTPThread(message, storageNode, deleteFolder=True)
+
+                    t1 = thread_sftp.SFTPThread(
+                        message, storageNode, deleteFolder=True)
                     t1.start()
 
-                    messages.info(request,f'File has been uploaded!')
-                    
+                    messages.info(request, f'File has been uploaded!')
+
                 except Exception as e:
-                    #Todo Function when false it must delete file from db 
+                    # Todo Function when false it must delete file from db
                     print(e)
                     serverDButil.delMD(FID)
                     shutil.rmtree(cwd)
             else:
                 serverDButil.delMD(FID)
                 shutil.rmtree(cwd)
-                messages.info(request,"There is not enough space")
-            
+                messages.info(request, "There is not enough space")
 
-            
         return redirect('/')
     else:
         form = FileForm()
-    return render(request,'file-Upload.html',context=context)
+    return render(request, 'file-Upload.html', context=context)
 
 
+def file_Retreive_view(request, id):
 
-            
-            
-            
-
-def file_Retreive_view(request,id): 
-    
     context = {
         "file": Files.objects.get(id=id)
     }
-    obj =Files.objects.get(id=id)
+    obj = Files.objects.get(id=id)
     cwd = os.path.dirname(obj.file.path)
     url = obj.file.url
-    
-    
+
     fName = serverDButil.getFileMD(obj.FID)[0]["fName"]
-    
+
     if not os.path.exists(cwd):
         os.mkdir(cwd)
     else:
         print("Directory Exists, Proceeding to SFTP")
-    #TODO CONNECTED STORAGE NODES
-    
+    # TODO CONNECTED STORAGE NODES
+
     context = {
         'button': False
     }
 
-    
-    if not os.path.isfile(os.path.join(cwd,fName)): #condition for file DNE in server
-        messages.info(request,f'file started downloading from storage node.')
+    if not os.path.isfile(os.path.join(cwd, fName)):  # condition for file DNE in server
+        messages.info(request, f'file started downloading from storage node.')
         # create the thread
         if obj.RAIDtype == "NONE":
-            #GET DATA FROM DB
+            # GET DATA FROM DB
             fileMD = serverDButil.getFileMD(obj.FID)[0]
             storageNode = serverDButil.getStorageNode(fileMD["SID"])
             message = {
                 "fName": obj.fName,
-                "FID" : obj.FID,
-                "cwd" : cwd,
-                "command":"download",
+                "FID": obj.FID,
+                "cwd": cwd,
+                "command": "download",
                 "size": obj.actualSize,
                 "start": obj.start,
                 "RAIDtype": obj.RAIDtype
-                }
+            }
             thread = thread_sftp.standard_get(message, fName, storageNode)
             # start the thread
             thread.start()
@@ -248,129 +221,125 @@ def file_Retreive_view(request,id):
             if obj.RAIDtype == "0":
                 raid_get_thread = raid0_tools.thread_get(obj)
                 raid_get_thread.start()
-                
+
             elif obj.RAIDtype == "1":
                 raid_get_thread = raid1_tools.thread_get(obj)
                 raid_get_thread.start()
-            
+
             else:
                 raid_get_thread = parity_tools.thread_get(obj)
                 raid_get_thread.start()
-                
+
         return redirect('/')
-        
+
         # t1.start()
 
-        
         # disable download button
-    elif os.path.isfile(os.path.join(cwd,fName)): #condition if file is in server already
-        if os.path.getsize(os.path.join(cwd,fName)) == obj.actualSize: #File complete download from storage node
-            if request.method == "GET": 
-                file_download = get_object_or_404(Files, pk = id )
+    # condition if file is in server already
+    elif os.path.isfile(os.path.join(cwd, fName)):
+        # File complete download from storage node
+        if os.path.getsize(os.path.join(cwd, fName)) == obj.actualSize:
+            if request.method == "GET":
+                file_download = get_object_or_404(Files, pk=id)
                 print(id)
-                response = HttpResponse(file_download.file, content_type='multipart/form-data')
-                response['Content-Disposition'] =f'attactments; fileName="{file_download.fName}"' 
+                response = HttpResponse(
+                    file_download.file, content_type='multipart/form-data')
+                response['Content-Disposition'] = f'attactments; fileName="{file_download.fName}"'
                 return response
-        else: # file is downloading from storage node
-            messages.info(request,f'file is downloading')
-    
-    
+        else:  # file is downloading from storage node
+            messages.info(request, f'file is downloading')
+
     return redirect('/')
 
 
+def file_RAID_view(request, id):
 
-
-                
-def file_RAID_view(request,id): 
-    
     context = {
-    "form": RAIDForm(),
-    "file":Files.objects.get(id=id) 
+        "form": RAIDForm(),
+        "file": Files.objects.get(id=id)
     }
     if request.method == "POST":
         form = RAIDForm(request.POST)
         RAIDtype = request.POST["RAIDtype"]
         obj = Files.objects.get(id=id)
-        # storageNode = {        
+        # storageNode = {
         #     "SID":1,
         #     "AllocSize":1000,
         #     "MaxSize": 1000,
         #     "IP":"192.168.0.225",
         #     "PORT":5001,
         # }
-        
-        
-        
-        
+
         if form.is_valid():
-            t1 = thread_sftp.raidPut(obj,RAIDtype)
+            t1 = thread_sftp.raidPut(obj, RAIDtype)
             t1.start()
-        
 
             return redirect('/')
-        else: 
+        else:
             form = RAIDForm()
-    return render(request,'file-RAID.html',context=context)
+    return render(request, 'file-RAID.html', context=context)
 
 
-
-    
-def file_Delete_view(request, id): 
+def file_Delete_view(request, id):
     obj = Files.objects.get(id=id)
-    
+
     if request.method == "POST":
-        
+
         serverDButil.delMD(obj.FID)
         cwd = os.path.dirname(obj.file.path)
-        
+
         if os.path.exists(cwd):
             shutil.rmtree(cwd)
         return redirect('/')
     context = {
-        "file":obj
-    }  
-    
-    return render(request,'file-Delete.html',context)
-
-#TODO: 
-def file_toLocalStorage_view(request,id): 
-    obj = Files.objects.get(id = id)
-    #Testing
-    context = {
         "file": obj
     }
-    if request.method == "POST": 
-        #-- INSERT COMMANDS HERE --# 
-        print(obj.file)
-        return redirect('/')
-    
-    return render(request, 'file-toLocalStorage.html',context)
 
-def file_backToStorageNodes_view(request,id): 
-    obj = Files.objects.get(id = id)
-    
-    context = {
-        "file": obj
-    }
-    if request.method == "POST": 
-        #-- INSERT COMMANDS HERE --# 
-        print(obj.file)
-        return redirect('/')
-    
-    return render(request, 'file-backToStorageNodes.html',context)
+    return render(request, 'file-Delete.html', context)
 
-#TODO
-def file_UNRAID_view(request,id):
+# TODO:
+
+
+def file_toLocalStorage_view(request, id):
     obj = Files.objects.get(id=id)
-   
+    # Testing
+    context = {
+        "file": obj
+    }
+    if request.method == "POST":
+        # -- INSERT COMMANDS HERE --#
+        print(obj.file)
+        return redirect('/')
+
+    return render(request, 'file-toLocalStorage.html', context)
+
+
+def file_backToStorageNodes_view(request, id):
+    obj = Files.objects.get(id=id)
+
+    context = {
+        "file": obj
+    }
+    if request.method == "POST":
+        # -- INSERT COMMANDS HERE --#
+        print(obj.file)
+        return redirect('/')
+
+    return render(request, 'file-backToStorageNodes.html', context)
+
+# TODO
+
+
+def file_UNRAID_view(request, id):
+    obj = Files.objects.get(id=id)
+
     cwd = os.path.dirname(obj.file.path)
-     #CHECK IF THE DIRECTORY FOR THE SFTP EXISTS
+    # CHECK IF THE DIRECTORY FOR THE SFTP EXISTS
     if not os.path.exists(cwd):
         os.mkdir(cwd)
     else:
         print("Directory Exists, Proceeding to SFTP")
-    
-    
+
     if request.method == "POST":
         if obj.RAIDtype == "0":
             print("UNRAIDING RAID 0")
@@ -383,80 +352,81 @@ def file_UNRAID_view(request,id):
         elif obj.RAIDtype == "PARITY":
             t1 = parity_tools.thread_unraid(obj)
             t1.start()
-    
-    context ={
-        "file":obj
-    }
-    
-    
-    return render(request,'file-UNRAID.html',context)
 
-
-def get_status_of_Nodes(request): 
-    obj = storageNodeInfo.objects.all() 
     context = {
-        "statusInfo_list":obj
+        "file": obj
     }
-    
-    return render(request,'get-statusOfNodes.html',context)
+
+    return render(request, 'file-UNRAID.html', context)
+
+
+def get_status_of_Nodes(request):
+    obj = storageNodeInfo.objects.all()
+    context = {
+        "statusInfo_list": obj
+    }
+
+    return render(request, 'get-statusOfNodes.html', context)
 
 
 ############################## Account Portion #############################
-def login_view(request): 
-    if request.method == "POST": 
+def login_view(request):
+    if request.method == "POST":
         username = request.POST.get("username")
         password = request.POST.get("password")
-        user = authenticate (request, username=username, password=password)
-        if user is None: 
+        user = authenticate(request, username=username, password=password)
+        if user is None:
             context = {
                 "error": "Invalid username or password"
             }
-            return render(request,"accounts/login.html",context)
-        login(request,user)
+            return render(request, "accounts/login.html", context)
+        login(request, user)
         return redirect('/')
-    return render(request,"accounts/login.html",{})
+    return render(request, "accounts/login.html", {})
 
-def logout_view(request): 
-    if request.method == "POST": 
+
+def logout_view(request):
+    if request.method == "POST":
         logout(request)
         return redirect('/')
-    
-    return render(request,"accounts/logout.html",{})
 
-def register_view(request): 
-    
-    form = UserCreationForm(request.POST or None )
-    if form.is_valid(): 
+    return render(request, "accounts/logout.html", {})
+
+
+def register_view(request):
+
+    form = UserCreationForm(request.POST or None)
+    if form.is_valid():
         user_obj = form.save()
         return redirect('/login')
-    
-    return render(request,"accounts/register.html",{"form":form})
+
+    return render(request, "accounts/register.html", {"form": form})
 
 
 @login_required
-def user_view(request): 
+def user_view(request):
     users = User.objects.all()
     print(users)
-    
+
     context = {
         "user_list": users
     }
-    
-    return render(request,'accounts/user.html',context)
+
+    return render(request, 'accounts/user.html', context)
+
 
 @login_required
-def deleteUser_view(request, username): 
+def deleteUser_view(request, username):
     try:
-        u = User.objects.get(username = username)
+        u = User.objects.get(username=username)
         u.delete()
-        messages.success(request, "The user is deleted")            
+        messages.success(request, "The user is deleted")
 
     except User.DoesNotExist:
-        messages.error(request, "User doesnot exist")    
+        messages.error(request, "User doesnot exist")
         return home_view(request)
 
-    except Exception as e: 
+    except Exception as e:
         return home_view(request)
 
     return home_view(request)
-

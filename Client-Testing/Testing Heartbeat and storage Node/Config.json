@@ -1,12 +1,10 @@
-﻿{
-"storageIP": "192.168.100.70", 
-"storagePort": 7000, 
+﻿{"storageIP": "192.168.100.75", 
+"storagePort": 6666, 
 "serverIP": "192.168.100.72", 
 "serverPort": 5000, 
 "SFTPport": 7704,
-"SID": "Aaron-Pc", 
-"AllocSize": 1, 
-"Registered": false, 
+"SID": "Aaron-Pc",
+"AllocSize": 1,
+"Registered": true, 
 "username": "aaron", 
-"password": "aaron" 
-}
+"password": "aaron"}
