@@ -8,6 +8,7 @@ from modules.ServerConnectionModule import SerConMod
 import subprocess
 stop_threads = False
 
+
 def find_process_id_by_port(port):
     # Find the process ID (PID) associated with the port
     cmd = f"lsof -i :{port} -t"
@@ -43,27 +44,23 @@ def main():
 
 
 if __name__ == '__main__':
-    try:
-        manager = multiprocessing.Manager()
-        main_process_event = manager.Event()
-        
-        # main()
-        t1 = multiprocessing.Process(target=main)
-        t1.start()
+    main()
+    # try:
+    #     manager = multiprocessing.Manager()
+    #     main_process_event = manager.Event()
 
-        t2 = multiprocessing.Process(target=SerConMod.main)
-        t2.start()
-        
-        import time
+    #     t1 = multiprocessing.Process(target=main)
+    #     t1.start()
 
-        
-        t1.join()
-        t2.join()
-        
+    #     t2 = multiprocessing.Process(target=SerConMod.main)
+    #     t2.start()
 
+    #     import time
 
+    #     t1.join()
+    #     t2.join()
 
-    except:
-
-        t1.terminate()
-        t2.terminate()
+    # except:
+    #     pass
+    #     t1.terminate()
+    #     t2.terminate()
