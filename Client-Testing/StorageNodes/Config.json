@@ -1,7 +1,7 @@
 ﻿{
-"storageIP": "192.168.100.75", 
-"storagePort": 7000, 
-"serverIP": "192.168.100.76", 
+"storageIP": "192.168.0.144", 
+"heartbeatPort": 7000, 
+"serverIP": "192.168.0.144", 
 "serverPort": 5000, 
 "SFTPport": 7704,
 "SID": "Aaron-Pc", 

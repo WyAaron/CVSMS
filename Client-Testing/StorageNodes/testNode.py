@@ -37,7 +37,7 @@ def Registration(client, config):
             # Multiplying the allocated size to GB
             "allocSize": config["AllocSize"],
             "storageIp": config["storageIP"],
-            "storagePort": config["storagePort"],
+            "heartbeatPort": config["heartbeatPort"],
             "SFTPport": config["SFTPport"],
             "command": "Register"
         }
@@ -63,7 +63,7 @@ def Heartbeat(client, config):
     Heart = {
         "command": "Heartbeat",
         "SID": config["SID"],
-        "port": config["storagePort"],
+        "port": config["heartbeatPort"],
         "status": True
     }
     print(f'Status: Proceding with Heartbeat to Server')
@@ -80,7 +80,7 @@ def Heartbeat(client, config):
             try:
                 client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
                 client.connect((config["serverIP"], config["serverPort"]))
-                client.bind((config["storageIP"], config["storagePort"]))
+                client.bind((config["storageIP"], config["heartbeatPort"]))
                 client.sendall(json.dumps(Heart).encode())
             except:
                 print("Status: no Response from Server")
@@ -398,7 +398,7 @@ def main():
         config = json.loads(f.read())
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as client:
         client.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        client.bind((config["storageIP"], config["storagePort"]))
+        client.bind((config["storageIP"], config["heartbeatPort"]))
         print(f'serverIP, port = {config["serverIP"],config["serverPort"]}')
         client.connect((config["serverIP"], config["serverPort"]))
         while True:
