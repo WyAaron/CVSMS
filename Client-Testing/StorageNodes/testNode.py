@@ -30,7 +30,7 @@ def getCurrTime():
 
 
 def Registration(client, config):
-    print(f'entered Registration ')
+    print(f'Status: Proceding with Registration')
     try:
         Register = {
             "SID": config["SID"],
@@ -49,11 +49,12 @@ def Registration(client, config):
             config["Registered"] = True
             json.dump(config, f)
             f.close()
-        print(f'Entering AllocSize creation')
+        print(f'Status: Storage Creation')
         file_module.CreateAlloc(config["AllocSize"], "storage")
         print(f' total Size {config["AllocSize"] * GB}')
         client.close()
     except Exception as e:
+        print('Status: Storage Registration Error, Please contact admin')
         print(repr(e))
 
 
@@ -65,7 +66,7 @@ def Heartbeat(client, config):
         "port": config["storagePort"],
         "status": True
     }
-
+    print(f'Status: Proceding with Heartbeat to Server')
     while True:
         try:
             client.sendall(json.dumps(Heart).encode())
@@ -80,14 +81,13 @@ def Heartbeat(client, config):
                 client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
                 client.connect((config["serverIP"], config["serverPort"]))
                 client.bind((config["storageIP"], config["storagePort"]))
-
                 client.sendall(json.dumps(Heart).encode())
             except:
-                print('did not enter this zone')
-            print("no Response from Server")
+                print("Status: no Response from Server")
             if ctr == 5:
                 client.close()
-                print("server no response, shutting down")
+                print(
+                    "Re-Status:server did not response for the alloted time, shutting down")
                 exit()
         time.sleep(2)
 
@@ -401,30 +401,39 @@ def main():
         client.bind((config["storageIP"], config["storagePort"]))
         print(f'serverIP, port = {config["serverIP"],config["serverPort"]}')
         client.connect((config["serverIP"], config["serverPort"]))
+        while True:
+            try:
+                if config["Registered"]:
+                    print(f'Status: Registered, Reconnecting with the Server')
+                    p1 = multiprocessing.Process(
+                        target=Heartbeat, args=(client, config,))
+                    p1.start()
 
-    while True:
-        print(f'Registration status: {config["Registered"]}')
-        try:
-            if config["Registered"]:
-                print('registered!')
-                # reconnecting()
-            else:
-                print(f'{type(config["AllocSize"])}')
-                Registration(client, config)
-                # ---- insert heartbeat----#
+                    p2 = multiprocessing.Process(target=SFTP, args=(
+                        config["storageIP"], config["SFTPport"], config["username"], config["password"]))
+                    p2.start()
 
-                p1 = multiprocessing.Process(
-                    target=Heartbeat, args=(client, config,))
-                p1.start()
+                    p1.join()
+                    p2.join()
 
-                p2 = multiprocessing.Process(target=SFTP, args=(
-                    config["storageIP"], config["SFTPport"], config["username"], config["password"]))
-                p2.start()
+                else:
+                    print(f'Status: Not Registered')
+                    Registration(client, config)
+                    # ---- insert heartbeat----#
 
-                p1.join()
-                p2.join()
-        except Exception as e:
-            print(repr(e))
+                    p1 = multiprocessing.Process(
+                        target=Heartbeat, args=(client, config,))
+                    p1.start()
+
+                    p2 = multiprocessing.Process(target=SFTP, args=(
+                        config["storageIP"], config["SFTPport"], config["username"], config["password"]))
+                    p2.start()
+
+                    p1.join()
+                    p2.join()
+            except Exception as e:
+                print("Status: Error with Registration/Reconnection contact admin")
+                print(repr(e))
 
 
 if __name__ == "__main__":

@@ -98,7 +98,6 @@ def main():
         server.listen()
         while True:
             try:
-
                 print(f'server listening on {PORT}')
                 conn, addr = server.accept()
                 print(f'Server Success')
