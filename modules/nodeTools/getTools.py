@@ -24,7 +24,7 @@ def getMaxFile(mdList, storSize):
     fragments = fragmentCheck(mdList, storSize)
     largest = 0
     
-    print(fragments)
+    #print(fragments)
     for i in fragments:
         if i[1] - i[0] > largest:
             largest = i[1] - i[0]
@@ -105,18 +105,47 @@ def get_storage_nodes(partNames,cwd):
                     if newSmallestSpace is None or space[1]-space[0] < smallestSpaceBetween:
                         newSmallestSpace = space
                         smallestSpaceBetween = space[1]-space[0]
+                        #print(f"SID: {storage_node['SID']} Smallest Space:{smallestSpaceBetween}")
             
             #CHECK IF NEW FOUND SPACE IN THE NEW NODE IS SMALLER THAN PREVIOUSLY FOUND SPACE
             
-             
-            if to_up_storage_node is None or (newSmallestSpace[1] - newSmallestSpace[0]) > (to_up_storage_node["Gap"][1] - to_up_storage_node["Gap"][0]):  
-                
-                
-                
-                
+            if to_up_storage_node is None:
                 to_up_storage_node = {"storageNode": storage_node , "Gap": newSmallestSpace}
                 
-                print(f"newSmallestSpace: {newSmallestSpace[1] - newSmallestSpace[0]} current: {to_up_storage_node['Gap'][1] - to_up_storage_node['Gap'][0]}")  
+            else:
+                
+                
+                
+            
+                to_up_SID = to_up_storage_node['storageNode']['SID']
+                to_up_total_size = to_up_storage_node['storageNode']['allocSize']
+                to_up_file_list = serverDButil.get_all_files_by_sid(to_up_SID)
+                
+                totalUsed = 0
+                
+                for i in to_up_file_list:
+                    totalUsed += i['actualSize']
+                
+                print(f"to_up_SID:{to_up_SID} totalRemainingSize:{to_up_total_size - totalUsed}")
+                
+                to_up_total_remaining_size = to_up_total_size - totalUsed
+                
+                totalUsed = 0
+                for i in files_in_node:
+                    totalUsed += i['actualSize']
+                
+                print(f"new_node_SID: {storage_node['SID']} totalRemainingSize:{storage_node['allocSize'] - totalUsed}")
+                current_node_remaining_size = storage_node['allocSize'] - totalUsed
+                
+                
+                if (current_node_remaining_size > to_up_total_remaining_size):
+                    to_up_storage_node = {"storageNode": storage_node , "Gap": newSmallestSpace} 
+                
+        
+                
+            
+                
+                #print(f"newSmallestSpace: {newSmallestSpace[1] - newSmallestSpace[0]} current: {to_up_storage_node['Gap'][1] - to_up_storage_node['Gap'][0]}")  
         
         #IF THERE WAS NO NODE FOUND END FUNCTION AND RETURN NONE
         if to_up_storage_node == None:
