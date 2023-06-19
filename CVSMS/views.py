@@ -128,7 +128,9 @@ def file_Upload_view(request):
             fName = os.listdir(cwd)[0]
 
             storageNode = NodeGetTools.get_storage_nodes([fName], cwd)
-
+            
+            print(storageNode)
+            
             if storageNode:
                 storageNode = storageNode[0]["storage_info"]
                 # GET FILE START BYTE

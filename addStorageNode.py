@@ -188,20 +188,10 @@ storageNodeUploadList = [
             ]   
 
 
-def delete(IP): 
-    conn = sqlite3.connect("db.sqlite3")
-    c = conn.cursor()
-    c.execute("DELETE FROM CVSMS_storageNodeInfo WHERE IP = ?", (IP,))
-    conn.commit()
-    conn.close()
-delete("192.168.0.213")
 
-##### UNCOMMENT TO ADD STORAGE NODES
-for i in storageNodeUploadList:
-    storageRegister(i)
 
 
 
 
 #ADD SUPERUSER USERNAME:renji PW:renji
-#add_superUser()
+add_superUser()

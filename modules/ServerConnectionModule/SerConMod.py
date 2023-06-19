@@ -16,7 +16,7 @@ def storageRegister(data):
     conn = sqlite3.connect("db.sqlite3")
     c = conn.cursor()  # {}
     c.execute("INSERT INTO CVSMS_storageNodeInfo VALUES (?,?,?,?,?,?,?,?)", (None,
-              data["SID"], data["allocSize"], data["storageIp"], data["storagePort"], data["allocSize"], True, data['SFTPport']))
+              data["SID"], data["allocSize"], data["storageIp"], data["heartbeatPort"], data["allocSize"], True, data['SFTPport']))
     conn.commit()
     print(f'{data["SID"]} - {data["storageIp"]} inserted at table')
     conn.close()
@@ -37,7 +37,7 @@ def storageHeartbeat(data):
     c.execute("INSERT INTO CVSMS_storageNodeStatus VALUES (?,?,?,?,?)",
               (None, data["SID"], data["port"], data["status"], getCurrTime()))
     conn.commit()
-    print(f'{data["SID"]} active @ {getCurrTime()} ')
+    #print(f'{data["SID"]} active @ {getCurrTime()} ')
     conn.close()
 
 
@@ -62,8 +62,9 @@ def StorageConnection(conn, addr):
         try:
             msg = "connected @ " + getCurrTime()
             data = conn.recv(1024)
-            # print(data)
+            #print(data.decode())
             dataFromClient = json.loads(data.decode())
+            #print(f'command: {dataFromClient["command"]}')
             if dataFromClient["command"] == "Register":
                 print(f'Entered Registration in DB')
                 # ----------------- INSERT DB CALL REGISTER-------######
@@ -74,16 +75,17 @@ def StorageConnection(conn, addr):
                 print(f"Sent ACK to {addr} ")
 
             elif dataFromClient["command"] == "Heartbeat":
-                print(f'Client Alive - {dataFromClient["SID"] } {addr}   \n')
+                #print(f'Client Alive - {dataFromClient["SID"] } {addr}')
                 storageHeartbeat(dataFromClient)
                 storageStatus(dataFromClient["SID"], True)
                 conn.sendall(msg.encode())
-                print(f'ACK {dataFromClient["SID"] } {addr}   \n')
+                #print(f'ACK {dataFromClient["SID"] } {addr}   \n')
                 # time.sleep(5)
             # ---- Reconnection -----------
+            SID = dataFromClient["SID"]
         except Exception as e:
-            storageStatus(dataFromClient["SID"], False)
-            print(f'------Storage Node {dataFromClient["SID"]} Has Disconnected---------')
+            storageStatus(SID, False)
+            print(f'------Storage Node {SID} Has Disconnected---------')
             break
 
 
