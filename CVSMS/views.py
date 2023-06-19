@@ -129,7 +129,7 @@ def file_Upload_view(request):
 
             storageNode = NodeGetTools.get_storage_nodes([fName], cwd)
             
-            print(storageNode)
+            # print(storageNode)
             
             if storageNode:
                 storageNode = storageNode[0]["storage_info"]
@@ -140,7 +140,7 @@ def file_Upload_view(request):
                 obj.start = start
                 obj.save()
 
-                print(start)
+                #print(start)
 
                 storageNode = storageNode["storageNode"]
                 serverDButil.addStorageNode(storageNode["SID"], FID)

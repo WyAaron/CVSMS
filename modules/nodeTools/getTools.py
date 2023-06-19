@@ -23,6 +23,8 @@ def filter_node_list():
 def getMaxFile(mdList, storSize):
     fragments = fragmentCheck(mdList, storSize)
     largest = 0
+    
+    print(fragments)
     for i in fragments:
         if i[1] - i[0] > largest:
             largest = i[1] - i[0]
@@ -88,7 +90,8 @@ def get_storage_nodes(partNames,cwd):
             
             elif getMaxFile(files_in_node, storage_node["allocSize"]) < file_size:
                 continue
-
+            
+            
             node_allocated_size = storage_node["allocSize"]
             gap_list = fragmentCheck(files_in_node, node_allocated_size)
             
@@ -103,9 +106,17 @@ def get_storage_nodes(partNames,cwd):
                         newSmallestSpace = space
                         smallestSpaceBetween = space[1]-space[0]
             
-            #CHECK IF NEW FOUND SPACE IN THE NEW NODE IS SMALLER THAN PREVIOUSLY FOUND SPACE            
-            if to_up_storage_node is None or (newSmallestSpace[1] - newSmallestSpace[0]) < (to_up_storage_node["Gap"][0] - to_up_storage_node["Gap"][1]):  
+            #CHECK IF NEW FOUND SPACE IN THE NEW NODE IS SMALLER THAN PREVIOUSLY FOUND SPACE
+            
+             
+            if to_up_storage_node is None or (newSmallestSpace[1] - newSmallestSpace[0]) > (to_up_storage_node["Gap"][1] - to_up_storage_node["Gap"][0]):  
+                
+                
+                
+                
                 to_up_storage_node = {"storageNode": storage_node , "Gap": newSmallestSpace}
+                
+                print(f"newSmallestSpace: {newSmallestSpace[1] - newSmallestSpace[0]} current: {to_up_storage_node['Gap'][1] - to_up_storage_node['Gap'][0]}")  
         
         #IF THERE WAS NO NODE FOUND END FUNCTION AND RETURN NONE
         if to_up_storage_node == None:
