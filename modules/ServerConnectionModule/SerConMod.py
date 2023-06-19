@@ -83,8 +83,7 @@ def StorageConnection(conn, addr):
             # ---- Reconnection -----------
         except Exception as e:
             storageStatus(dataFromClient["SID"], False)
-            print(repr(e))
-            print(f'------Server Failed: Restart Server---------')
+            print(f'------Storage Node {dataFromClient["SID"]} Has Disconnected---------')
             break
 
 
