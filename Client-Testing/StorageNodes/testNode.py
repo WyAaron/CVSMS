@@ -69,12 +69,14 @@ def Heartbeat(client, config):
     print(f'Status: Proceding with Heartbeat to Server')
     while True:
         try:
+            
             client.sendall(json.dumps(Heart).encode())
             client.settimeout(3)
             mainrep = client.recv(1024)
             print(f'Server:{mainrep.decode()}')
             if mainrep.decode():
                 time.sleep(2)
+            ctr = 0
         except:
             ctr += 1
             try:

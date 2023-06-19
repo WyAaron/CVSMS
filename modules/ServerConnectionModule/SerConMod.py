@@ -4,7 +4,7 @@ import json
 import socket
 import sqlite3
 from datetime import datetime
-
+from manage import stop_threads 
 
 def getCurrTime():
     now = datetime.now()
@@ -89,7 +89,7 @@ def StorageConnection(conn, addr):
 
 
 def main():
-    IP = "192.168.100.76"
+    IP = "192.168.0.144"
     PORT = 5000
 
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as server:
