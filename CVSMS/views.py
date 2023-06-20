@@ -399,8 +399,13 @@ def register_view(request):
 
     form = UserCreationForm(request.POST or None)
     if form.is_valid():
-        user_obj = form.save()
-        return redirect('/login')
+        form.save()
+        new_user = authenticate(
+            username = form.cleaned_data['username'],
+            password = form.cleaned_data['password1']
+        )
+        login(request,new_user)
+        return redirect('/')
 
     return render(request, "accounts/register.html", {"form": form})
 

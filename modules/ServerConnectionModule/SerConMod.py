@@ -4,7 +4,8 @@ import json
 import socket
 import sqlite3
 from datetime import datetime
-from manage import stop_threads 
+from manage import stop_threads
+
 
 def getCurrTime():
     now = datetime.now()
@@ -37,7 +38,7 @@ def storageHeartbeat(data):
     c.execute("INSERT INTO CVSMS_storageNodeStatus VALUES (?,?,?,?,?)",
               (None, data["SID"], data["port"], data["status"], getCurrTime()))
     conn.commit()
-    #print(f'{data["SID"]} active @ {getCurrTime()} ')
+    # print(f'{data["SID"]} active @ {getCurrTime()} ')
     conn.close()
 
 
@@ -62,9 +63,9 @@ def StorageConnection(conn, addr):
         try:
             msg = "connected @ " + getCurrTime()
             data = conn.recv(1024)
-            #print(data.decode())
+            # print(data.decode())
             dataFromClient = json.loads(data.decode())
-            #print(f'command: {dataFromClient["command"]}')
+            # print(f'command: {dataFromClient["command"]}')
             if dataFromClient["command"] == "Register":
                 print(f'Entered Registration in DB')
                 # ----------------- INSERT DB CALL REGISTER-------######
@@ -75,11 +76,11 @@ def StorageConnection(conn, addr):
                 print(f"Sent ACK to {addr} ")
 
             elif dataFromClient["command"] == "Heartbeat":
-                #print(f'Client Alive - {dataFromClient["SID"] } {addr}')
+                # print(f'Client Alive - {dataFromClient["SID"] } {addr}')
                 storageHeartbeat(dataFromClient)
                 storageStatus(dataFromClient["SID"], True)
                 conn.sendall(msg.encode())
-                #print(f'ACK {dataFromClient["SID"] } {addr}   \n')
+                # print(f'ACK {dataFromClient["SID"] } {addr}   \n')
                 # time.sleep(5)
             # ---- Reconnection -----------
             SID = dataFromClient["SID"]
@@ -90,7 +91,7 @@ def StorageConnection(conn, addr):
 
 
 def main():
-    IP = "192.168.0.144"
+    IP = "192.168.100.76"
     PORT = 5000
 
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as server:

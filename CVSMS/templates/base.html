@@ -21,8 +21,9 @@
             }
             
             .header-bar {
-                display: flex;
-                justify-content: space-between;
+                {% comment %} display: flex; {% endcomment %}
+                {% comment %} justify-content: column; {% endcomment %}
+                max-width: 100%;
                 color: #fff;
                 padding: 10px;
                 border-radius: 5px 5px 0 0;
@@ -66,12 +67,17 @@
                 -webkit-box-shadow: 2px 2px 13px -4px rgba(0, 0, 0, 0.21);
                 box-shadow: 2px 2px 13px -4px rgba(0, 0, 0, 0.21);
             }
-            .logout {
+            {% comment %} .logout {
                 padding-left: 650px;
             
-            }
+            } {% endcomment %}
             #center {
                 align-items: center;
+            }
+            .parent{
+                display: flex; 
+                justify-content: space-between;
+                max-width: 1000px;
             }
         </style>
 
@@ -86,21 +92,27 @@
             <div >
                 {% if request.user.is_authenticated %}
                 <h1> <a href="/">Welcome {{request.user}} to  CVSMS</a> </h1>
-                {% if request.user.is_superuser %}
-                <a href="{% url 'user' %}"> Users</a> |
-                <a href="{% url 'get-statusOfNodes' %}">Node Status |</a>
-                {% endif %}
-                <a href="{% url 'file-upload' %}"> Upload File</a> 
-                &nbsp; 
-                <a class="logout" href="{% url 'logout'  %}">Logout</a> 
-                    
+                <div class="parent">
+                    <div>
+                        {% if request.user.is_superuser %}
+                        <a href="{% url 'user' %}"> Users</a> |
+                        <a href="{% url 'get-statusOfNodes' %}">Node Status |</a>
+                        {% endif %}
+                        <a href="{% url 'file-upload' %}"> Upload File</a> 
+                    </div>
+                    <div>
+                        <a href="{% url 'logout'  %}">Logout</a> 
+                    </div>
+                </div>
+                
+                
                 {% else %}
                 <h1> <a href="/">Welcome to CVSMS</a> </h1>
-        
-                    <!-- <a href="login">Login</a> -->
+                
+                <!-- <a href="login">Login</a> -->
                 {% endif %}
-
             </div>
+
         </div>
         {% include 'messages.html' %}
         <br>

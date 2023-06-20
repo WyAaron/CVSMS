@@ -44,23 +44,23 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
-    # try:
-    #     manager = multiprocessing.Manager()
-    #     main_process_event = manager.Event()
+    # main()
+    try:
+        manager = multiprocessing.Manager()
+        main_process_event = manager.Event()
 
-    #     t1 = multiprocessing.Process(target=main)
-    #     t1.start()
+        t1 = multiprocessing.Process(target=main)
+        t1.start()
 
-    #     t2 = multiprocessing.Process(target=SerConMod.main)
-    #     t2.start()
+        t2 = multiprocessing.Process(target=SerConMod.main)
+        t2.start()
 
-    #     import time
+        import time
 
-    #     t1.join()
-    #     t2.join()
+        t1.join()
+        t2.join()
 
-    # except:
-    #     pass
-    #     t1.terminate()
-    #     t2.terminate()
+    except:
+        pass
+        t1.terminate()
+        t2.terminate()

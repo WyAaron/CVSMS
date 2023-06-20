@@ -33,32 +33,33 @@ def main():
         sftp = threading.Thread(target=sftp_thread, args = (config,))
         sftp.start()    
     
-        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as client:
-            client.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-            client.bind((config["storageIP"], config["heartbeatPort"]))
-            print(f'serverIP, port = {config["serverIP"],config["serverPort"]}')
-            client.connect((config["serverIP"], config["serverPort"]))
-            
-            try:
-                if config["Registered"]:
-                    print(f'Status: Registered, Reconnecting with the Server')
-                    p1 = threading.Thread(
-                        target=heartbeat_module.Heartbeat, args=(client, config,))
-                    p1.start()
-                    p1.join()
-                    
-                else:
-                    print(f'Status: Not Registered')
-                    heartbeat_module.Registration(client, config)
-                    # ---- insert heartbeat----#
+        while True:
+            with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as client:
+                client.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+                client.bind((config["storageIP"], config["heartbeatPort"]))
+                print(f'serverIP, port = {config["serverIP"],config["serverPort"]}')
+                client.connect((config["serverIP"], config["serverPort"]))
+                
+                try:
+                    if config["Registered"]:
+                        print(f'Status: Registered, Reconnecting with the Server')
+                        p1 = threading.Thread(
+                            target=heartbeat_module.Heartbeat, args=(client, config,))
+                        p1.start()
+                        p1.join()
+                        
+                    else:
+                        print(f'Status: Not Registered')
+                        heartbeat_module.Registration(client, config)
+                        # ---- insert heartbeat----#
 
-                    p1 = threading.Thread(
-                        target=heartbeat_module.Heartbeat, args=(client, config,))
-                    p1.start()
-                    p1.join()
-                    
-            except Exception as e:
-                print("Status: Error with Registration/Reconnection contact admin")
+                        p1 = threading.Thread(
+                            target=heartbeat_module.Heartbeat, args=(client, config,))
+                        p1.start()
+                        p1.join()
+                        
+                except Exception as e:
+                    print("Status: Error with Registration/Reconnection contact admin")
 
         
 

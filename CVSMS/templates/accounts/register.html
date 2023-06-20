@@ -6,10 +6,20 @@
 {% if not request.user.is_authenticated %}
 
 <form method="POST">{% csrf_token %}
-    {{form.as_p}}
+    <h3>User Registration</h3>
+
+    {% comment %} {{form.as_p}} {% endcomment %}
+    {% for field in form %}
+    <div class="fieldWrapper">
+        <h6 style="color:red"> {{ field.errors }} </h6>
+        {{ field.label_tag }} {{ field }}
+    </div>
+{% endfor %}
+
+    
     <button type="submit"> Register</button>
 </form>
-    <p>Already have an account? Please<a href="/login">Login </a> </p>
+    <p>Already have an account? Please <a href="/login">Login </a> </p>
 {% else %}
 <p>You're already logged in and cannot register. Would you like to <a href="/logout/"> logout?</a></p>
 {% endif %}
