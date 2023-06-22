@@ -98,8 +98,8 @@ class thread_unraid(threading.Thread):
         
         #FIND THE SID OF THE STORAGE NODE THAT HAS THE LARGER CAPACITY
         for i in fileLocations:
-           if storageNode["maxSize"] < i["maxSize"]:
-               storageNode = i
+            if storageNode["maxSize"] < i["maxSize"]:
+                storageNode = i
         
         newSID = storageNode["SID"] 
         

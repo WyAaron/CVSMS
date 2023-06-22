@@ -72,6 +72,18 @@ def fragmentCheck(mdList, storSize):
 def get_storage_nodes(partNames,cwd):
     
     allNodes = serverDButil.getAllStorageNodes()
+    
+    
+    
+    #REMOVE ARCHIVE NODE FROM THE LIST OF ALL NODES
+    allNodes = [item for item in allNodes if item["SID"] != "ARCHIVE"]
+        
+    
+    
+    print(len(allNodes))
+    
+    
+    
     file_and_node_tuple_list = []
     file_and_node_tuple_list = []
     for partName in partNames:
