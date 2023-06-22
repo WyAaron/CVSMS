@@ -122,7 +122,7 @@ class thread_unraid(threading.Thread):
         file = self.obj.file,
         actualSize = self.obj.actualSize,
         FID = self.obj.FID,
-        start = start["start"],
+        start = start,
         isCached = False,
         SID = newSID)
         
