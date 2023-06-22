@@ -149,7 +149,8 @@ class archive_get(threading.Thread):
             archiveCWD = os.path.join(os.getcwd(),"storageFolder/storage")
             
             file_module.retFile(message, archiveCWD)
-        
+
+            print("FINISHED RETRIEVING FILE FROM ARCHIVE")
         
 
 class unarchive(threading.Thread):
