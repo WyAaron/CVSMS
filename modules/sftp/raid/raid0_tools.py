@@ -211,7 +211,7 @@ class thread_unraid(threading.Thread):
                         actualSize = self.obj.actualSize,
                         FID = self.obj.FID,
                         #start = storageNode[0]["Gap"][0],
-                        start = 0,
+                        start = start,
                         isCached = False,
                         SID = storageNode["SID"])
                     

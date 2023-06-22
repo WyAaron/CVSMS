@@ -103,15 +103,15 @@ class thread_unraid(threading.Thread):
         
         newSID = storageNode["SID"] 
         
-        #LOCATE THE FILE MD WITH THAT CONTAINS THE NEW SID
-        nFileMD = None
+        #LOCATE THE START OF THE NEW FILE MD THAT CONTAINS THE NEW SID
         for i in fileMD:
             if i["SID"] == newSID:
-                nFileMD = i
+                start = i["start"]
         
         
-        print(nFileMD["start"])
+        #print(start)
         
+
         
         #CREATE THE NEW UNRAIDED FILE ENTRY
         serverDButil.delMD(self.obj.FID)
@@ -122,8 +122,7 @@ class thread_unraid(threading.Thread):
         file = self.obj.file,
         actualSize = self.obj.actualSize,
         FID = self.obj.FID,
-        #start = nFileMD["start"],
-        start = 0,
+        start = start["start"],
         isCached = False,
         SID = newSID)
         
