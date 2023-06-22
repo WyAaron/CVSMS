@@ -13,39 +13,45 @@ import modules.sftp.sftp_tools as sftp_tools
 
 from CVSMS.models import  Files
 
-class SFTPThread(threading.Thread):
-    def __init__(self, message, storageNode, deleteFolder = False):
-        # execute the base constructor
-        threading.Thread.__init__(self)
+class SFTPThread():
+    def __init__(self, message, storageNode, isArchive = False):
+        
         # store the value
+
         self.storageNode = storageNode
         self.message = message
-        self.deleteFolder = deleteFolder
+        self.isArchive = isArchive
+        
+        self.success = True
+        
     # override the run function
     def run(self):
-        # TODO: Change to SFTP function
         
-            #UPLOAD COMMAND
-            if self.message["command"] == "upload":
-                print(self.storageNode["SID"])
-                try:
-                    sftp_tools.put(self.message, self.storageNode)
+        #UPLOAD COMMAND
+        if self.message["command"] == "upload":
+            try:
+                sftp_tools.put(self.message, self.storageNode)
 
-                #CHECK IF THERE ARE ANY ERRORS IN THE FILE UPLOAD
-                except Exception as e:
-                    print(e)
-                    print("ERROR IN FILE UPLOAD")
+            #CHECK IF THERE ARE ANY ERRORS IN THE FILE UPLOAD
+            except Exception as e:
+                print(e)
+                print("ERROR IN FILE UPLOAD")
+                
+                #DELETE FILE METADATA IF IT IS NOT AN ARCHIVED FILE
+                if not self.isArchive:
                     serverDButil.delMD(self.message["FID"])
-                
-                #REMOVE FILE FROM LOCAL STORAGE AFTER DOWNLOAD
-                shutil.rmtree(self.message["cwd"])
-            
-            #DOWNLOAD COMMAND
-            elif self.message["command"] == "download":
-                sftp_tools.get(self.message, self.storageNode)
-                
-       
-          
+                    self.success = False
+                    
+                else:
+                    self.success = False
+
+            #REMOVE FILE FROM LOCAL STORAGE AFTER DOWNLOAD
+            shutil.rmtree(self.message["cwd"])
+        
+        #DOWNLOAD COMMAND
+        elif self.message["command"] == "download":
+            sftp_tools.get(self.message, self.storageNode)
+
             
 class standard_get(threading.Thread):
     def __init__(self,message, fName, storageNode):
@@ -71,8 +77,9 @@ class standard_get(threading.Thread):
         # "command":"download"
         # }
         
-        get_Thread = SFTPThread(self.message, self.storageNode)
-        get_Thread.start()
+        SFTP = SFTPThread(self.message, self.storageNode)
+        SFTP.run()
+        
     
     
 class raidPut(threading.Thread):
@@ -177,7 +184,6 @@ class raidPut(threading.Thread):
                     start = i["storage_info"]["Gap"][0]
                     storageNode = i["storage_info"]["storageNode"]
                     
-                    print(storageNode)
                     
                     message = {
                         "fName": i["fName"],

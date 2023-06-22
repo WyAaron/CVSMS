@@ -8,7 +8,14 @@ GB = 2 ** 30
 def storageRegister(data): 
     conn = sqlite3.connect("db.sqlite3")
     c = conn.cursor()
-    c.execute("INSERT INTO CVSMS_storageNodeInfo VALUES (?,?,?,?,?,?,?)",(None,data["SID"],data["allocSize"],data["storageIp"],data["storagePort"],data["allocSize"],True))
+    c.execute("INSERT INTO CVSMS_storageNodeInfo VALUES (?,?,?,?,?,?,?,?)",(None,
+                                                                          data["SID"],
+                                                                          data["allocSize"],
+                                                                          data["storageIp"],
+                                                                          data["storagePort"],
+                                                                          data["allocSize"],
+                                                                          True, 
+                                                                          data["SFTPport"]))
     conn.commit()
     print(f'{data["SID"]} - {data["storageIp"]} inserted at table')
     conn.close()
@@ -77,10 +84,11 @@ storageNodeUploadList = [
 
 
 
+import modules.sqlite3.serverDButil as serverDButil
 
 
-def add_archive():
-    
+def create_archive():
+
     size = 1*GB
     try:
         data = {        
@@ -88,24 +96,23 @@ def add_archive():
                         "allocSize":size,
                         "MaxSize": size,
                         "storageIp":"N/A",
-                        "storagePort":"N/A",
-                        "online":True
+                        "storagePort":0,
+                        "online":True,
+                        "SFTPport":0
         }
         
         file_module.CreateAlloc(size)
         
         storageRegister(data)
         print("ARCHIVE STORAGE SUCCESSFULLY CREATED")
-    except:
-        print("error in creating storage node")
-    
-    
-    pass
-
-
-
+    except Exception as e:
+        print(e)
+  
 
 
 #ADD SUPERUSER USERNAME:renji PW:renji
 #add_superUser()
-add_archive()
+
+
+#size = int(input("ENTER ARCHIVE SIZE"))
+create_archive()

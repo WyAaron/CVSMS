@@ -20,7 +20,7 @@ def addMD(item):
 	file = item['file']
 
 	c.execute("INSERT INTO CVSMS_files VALUES (?,?,?,?,?,?,?,?,?,?)", (result,FID, fileName, owner, RAIDid, RAIDtype, SID, actualSize, start, file))
-	print("\nEntry added successfully\n")
+	print("Entry added successfully")
 
 	conn.commit()
 	conn.close()
@@ -53,7 +53,7 @@ def updateRaidType(RAIDtype, id):
 	c = conn.cursor()
 
 	c.execute("UPDATE CVSMS_files SET RAIDtype = ? WHERE FID = ?", (RAIDtype, id))
-	print("\nEntry updated successfully\n")
+	print("Entry updated successfully")
 
 	conn.commit()
 	conn.close()
@@ -69,7 +69,7 @@ def addStorageNode(SID, id):
 	c = conn.cursor()
 
 	c.execute("UPDATE CVSMS_files SET SID = ? WHERE FID = ?", (SID, id))
-	print("\nEntry updated successfully\n")
+	print("Entry updated successfully")
 
 	conn.commit()
 	conn.close()
@@ -196,7 +196,7 @@ def removeSID(id):
 	c = conn.cursor()
 
 	c.execute("UPDATE CVSMS_files SET SID = ? WHERE FID = ?", ("NONE", id))
-	print("\nEntry updated successfully\n")
+	print("Entry updated successfully")
 
 	conn.commit()
 	conn.close()
@@ -207,7 +207,7 @@ def setRAIDtype(RAIDtype, id):
 	c = conn.cursor()
 
 	c.execute("UPDATE CVSMS_files SET RAIDtype = ? WHERE FID = ?", (RAIDtype, id))
-	print("\nEntry updated successfully\n")
+	print("Entry updated successfully")
 
 	conn.commit()
 	conn.close()
@@ -218,7 +218,7 @@ def setFileStart(start, id):
 	c = conn.cursor()
 
 	c.execute("UPDATE CVSMS_files SET start = ? WHERE FID = ?", (start, id))
-	print("\nEntry updated successfully\n")
+	print("Entry updated successfully")
 
 	conn.commit()
 	conn.close()
@@ -228,7 +228,7 @@ def addFID(FID, id):
 	c = conn.cursor()
 
 	c.execute("UPDATE CVSMS_files SET FID = ? WHERE id = ?", (FID, id))
-	print("\nEntry updated successfully\n")
+	print("Entry updated successfully")
 
 	conn.commit()
 	conn.close()

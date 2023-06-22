@@ -38,6 +38,7 @@ import modules.sftp.thread_sftp as thread_sftp
 import modules.sftp.raid.raid0_tools as raid0_tools
 import modules.sftp.raid.raid1_tools as raid1_tools
 import modules.sftp.raid.parity_tools as parity_tools
+import modules.archive.archive_tools as archive_tools
 # -----------------------------
 
 
@@ -155,11 +156,12 @@ def file_Upload_view(request):
                 }
 
                 try:
-
-                    t1 = thread_sftp.SFTPThread(
-                        message, storageNode, deleteFolder=True)
+                    
+                    sftpClass = thread_sftp.SFTPThread(message, storageNode)
+                    
+                    t1 = threading.Thread(target = sftpClass.run())
                     t1.start()
-
+                    
                     messages.info(request, f'File has been uploaded!')
 
                 except Exception as e:
@@ -189,20 +191,31 @@ def file_Retreive_view(request, id):
 
     fName = serverDButil.getFileMD(obj.FID)[0]["fName"]
 
-    if not os.path.exists(cwd):
-        os.mkdir(cwd)
-    else:
-        print("Directory Exists, Proceeding to SFTP")
+   
     # TODO CONNECTED STORAGE NODES
 
     context = {
         'button': False
     }
-
-    if not os.path.isfile(os.path.join(cwd, fName)):  # condition for file DNE in server
+    #DOWNLOAD IF FILE IS NOT IN SERVER
+    if not os.path.isfile(os.path.join(cwd, fName)):  
+        
+        if not os.path.exists(cwd):
+            os.mkdir(cwd)
+        else:
+            print("Directory Exists, Proceeding to SFTP")
+            
         messages.info(request, f'file started downloading from storage node.')
         # create the thread
-        if obj.RAIDtype == "NONE":
+        
+        if obj.SID == "ARCHIVE":
+            print("RETRIEVING ARCHIVE FILES")
+            
+            archive = archive_tools.archive_get(obj)
+            archive.start()
+         
+        
+        elif obj.RAIDtype == "NONE":
             # GET DATA FROM DB
             fileMD = serverDButil.getFileMD(obj.FID)[0]
             storageNode = serverDButil.getStorageNode(fileMD["SID"])
@@ -218,19 +231,22 @@ def file_Retreive_view(request, id):
             thread = thread_sftp.standard_get(message, fName, storageNode)
             # start the thread
             thread.start()
+        
+        
+        elif obj.RAIDtype == "0":
+            print("DOWNLOADING RAID 0 FILES")
+            raid_get_thread = raid0_tools.thread_get(obj)
+            raid_get_thread.start()
+
+        elif obj.RAIDtype == "1":
+            print("DOWNLOADING RAID 1 FILES")
+            raid_get_thread = raid1_tools.thread_get(obj)
+            raid_get_thread.start()
+
         else:
-            print("DOWNLOADING RAIDED FILES")
-            if obj.RAIDtype == "0":
-                raid_get_thread = raid0_tools.thread_get(obj)
-                raid_get_thread.start()
-
-            elif obj.RAIDtype == "1":
-                raid_get_thread = raid1_tools.thread_get(obj)
-                raid_get_thread.start()
-
-            else:
-                raid_get_thread = parity_tools.thread_get(obj)
-                raid_get_thread.start()
+            print("DOWNLOADING pRAID FILES")
+            raid_get_thread = parity_tools.thread_get(obj)
+            raid_get_thread.start()
 
         return redirect('/')
 
@@ -310,7 +326,17 @@ def file_toLocalStorage_view(request, id):
     }
     if request.method == "POST":
         # -- INSERT COMMANDS HERE --#
-        print(obj.file)
+        print("STARTING ARCHIVE")
+        # if obj.SID == "ARCHIVE":
+        #     print("FILE IS ALREADY IN ARCHIVE")
+        #     unarchive = archive_tools.unarchive(obj)
+        #     unarchive.start()
+        # else:
+        archive = archive_tools.archive_put(obj)
+        archive.start()
+
+        
+        
         return redirect('/')
 
     return render(request, 'file-toLocalStorage.html', context)
@@ -324,7 +350,11 @@ def file_backToStorageNodes_view(request, id):
     }
     if request.method == "POST":
         # -- INSERT COMMANDS HERE --#
-        print(obj.file)
+        #print(obj.file)
+        
+        unarchive = archive_tools.unarchive(obj)
+        unarchive.start()
+        
         return redirect('/')
 
     return render(request, 'file-backToStorageNodes.html', context)
