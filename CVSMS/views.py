@@ -369,21 +369,26 @@ def file_UNRAID_view(request, id):
     # CHECK IF THE DIRECTORY FOR THE SFTP EXISTS
     if not os.path.exists(cwd):
         os.mkdir(cwd)
+        return redirect('/')
     else:
         print("Directory Exists, Proceeding to SFTP")
+        
 
     if request.method == "POST":
         if obj.RAIDtype == "0":
             print("UNRAIDING RAID 0")
             t1 = raid0_tools.thread_unraid(obj)
             t1.start()
+            return redirect('/')
         elif obj.RAIDtype == "1":
             print("UNRAIDING RAID 1")
             t1 = raid1_tools.thread_unraid(obj)
             t1.start()
+            return redirect('/')
         elif obj.RAIDtype == "PARITY":
             t1 = parity_tools.thread_unraid(obj)
             t1.start()
+            return redirect('/')
 
     context = {
         "file": obj
@@ -456,6 +461,7 @@ def user_view(request):
 def deleteUser_view(request, username):
     try:
         u = User.objects.get(username=username)
+        serverDButil.deleteUserFiles(username)
         u.delete()
         messages.success(request, "The user is deleted")
 

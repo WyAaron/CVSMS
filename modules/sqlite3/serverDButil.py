@@ -232,4 +232,12 @@ def addFID(FID, id):
 
 	conn.commit()
 	conn.close()
-		
+
+######### To be called when a user is delted ################
+def deleteUserFiles(owner): 
+	conn = sqlite3.connect('db.sqlite3')
+	c = conn.cursor()
+	c.execute("DELETE FROM CVSMS_files WHERE owner= ?",(owner,))
+	print("Deleted all files")
+	conn.commit()
+	conn.close()

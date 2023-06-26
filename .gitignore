@@ -137,3 +137,4 @@ GitHub.sublime-settings
 .history
 modules/ServerConnectionModule/SerConMod.py
 Client-Testing/Config.json
+storageFolder/storage
