@@ -91,7 +91,7 @@ def StorageConnection(conn, addr):
 
 
 def main():
-    IP = "192.168.100.76"
+    IP = "172.16.2.142"
     PORT = 5000
 
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as server:
