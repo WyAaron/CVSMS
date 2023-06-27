@@ -35,9 +35,11 @@ def fragmentCheck(mdList, storSize):
     prev_end = 0
     spaceBetweenFiles  = []
     
+    
     for file in jsonList:
+        
         # Calculate the end byte of the current file
-        endByte = file["start"] + file["fileSize"]
+        endByte = file["start"] + file["actualSize"]
         
         #calculate if there is a gap between the previous file and the current file
         if file["start"] != 0:

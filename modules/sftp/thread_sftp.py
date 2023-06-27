@@ -222,12 +222,12 @@ class raidPut(threading.Thread):
                     #REMOVE THE SID FROM THE ORIGINAL FILE
                     serverDButil.removeSID(self.obj.FID)
                     
-                    #SET THE RAID TYPE FOR THE FILES 
-                    serverDButil.setRAIDtype(self.RAIDtype, self.obj.FID)
+                    
                     
                     
                     #RAID ID COUNTER
                     raid_id = 0
+                    
                     
                     
                     #CREATE DATABASE ENTRY FOR NEWLY UPLOADED FILES
@@ -250,6 +250,11 @@ class raidPut(threading.Thread):
                             start = start,
                             FID=self.obj.FID,)
 
+                    
+                    # #SET THE RAID TYPE FOR THE FILES 
+                    # serverDButil.setRAIDtype(self.RAIDtype, self.obj.FID)
+                    
+                    
                     shutil.rmtree(cwd)
     
             

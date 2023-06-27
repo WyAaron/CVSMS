@@ -128,15 +128,12 @@ def get_storage_nodes(partNames,cwd):
                 for i in to_up_file_list:
                     totalUsed += i['actualSize']
                 
-                print(f"to_up_SID:{to_up_SID} totalRemainingSize:{to_up_total_size - totalUsed}")
-                
                 to_up_total_remaining_size = to_up_total_size - totalUsed
                 
                 totalUsed = 0
                 for i in files_in_node:
                     totalUsed += i['actualSize']
                 
-                print(f"new_node_SID: {storage_node['SID']} totalRemainingSize:{storage_node['allocSize'] - totalUsed}")
                 current_node_remaining_size = storage_node['allocSize'] - totalUsed
                 
                 
