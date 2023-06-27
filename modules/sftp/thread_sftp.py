@@ -221,7 +221,7 @@ class raidPut(threading.Thread):
                     
                     #REMOVE THE SID FROM THE ORIGINAL FILE
                     serverDButil.removeSID(self.obj.FID)
-                    
+                    serverDButil.setRAIDtype(self.RAIDtype, self.obj.FID)
                     
                     
                     
@@ -252,7 +252,7 @@ class raidPut(threading.Thread):
 
                     
                     # #SET THE RAID TYPE FOR THE FILES 
-                    # serverDButil.setRAIDtype(self.RAIDtype, self.obj.FID)
+                    
                     
                     
                     shutil.rmtree(cwd)
