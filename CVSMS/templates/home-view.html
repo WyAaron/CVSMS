@@ -63,7 +63,7 @@
         <td><a href="{% url 'file-UNRAID' file.id %}"> {{file.RAIDtype}}</a></td>
         {% endif %}
         
-        {% if file.SID ==  "LOCAL"    %}
+        {% if file.SID ==  "ARCHIVE"    %}
         <td><a href="{% url 'file-backToStorageNodes' file.id %}">{{file.SID}}</a></td>
         {% else %}
         <td><a href="{% url 'file-toLocalStorage' file.id %}"> {{file.SID}}</a></td>
