@@ -137,41 +137,55 @@ class pRAID:
         
         #OPEN THE FILE TO BE SPLIT
         with open(os.path.join(storageLocation,fName), "rb") as originalFile, open(os.path.join(storageLocation,f"{fName}-p"), "wb") as parityFile:
-            temp = 0
             #WRITE THE FILE IN EACH PART 
+            
+            #FOR ZERO MB FILES check if it has ran atleast once
             once = 0
             while True:
                 # GET DATA FROM ORIGINAL FILE
-                data = originalFile.read(25*MB)
-                if not data and once >1:
-                    break
-                    
-                once+=1
-                if len(data) < 25*MB:
-                    data += bytes(25*MB - len(data))
+                data1 = originalFile.read(25*MB)
+                data2 = originalFile.read(25*MB)
                 
-                #PUT DATA IN FILE PART
-                fileList[ctr].write(data)
-                parityChunks.append(data)
-                ctr+=1
-                
-                #RESET COUNTER IF IT HAS REACHED THE LAST FILE
-                if ctr == numOfFiles:
                     
-                    #PERFORM XOR OPERATION
-                    parityData = xor_chunks(parityChunks[0], parityChunks[1])
+                
+                
+                #if there is still data gathered from data 1
+                if data1 or not once:
+                    if len(data1) < 25*MB:
+                        data1 += bytes(25*MB - len(data1))
+                    
+                    
+                    if len(data2) < 25*MB:
+                        data2 += bytes(25*MB - len(data2))
+                
+                    #PUT DATA IN FILE PART
+                    fileList[0].write(data1)
+                    
+                    fileList[1].write(data2)
+                    
+                    
+        
+                    
+                    parityData = xor_chunks(data1, data2)
+                    
+                    
+                
 
                     #STORE TO FILE
                     parityFile.write(parityData)
                     
-                    #RESET PARITY CHUNK
-                    parityChunks = []
-                    ctr = 0 
 
+                once += 1
+                    
+                if (not data1 or not data2) and once >1:
+                    break
                 # CHECK IF END OF FILE
                 #temp+= len(data)
                 
                 #progress_bar(temp, os.path.getsize(fName), status="splitting" )
+            
+            
+            
             
         #CLOSE ALL THE FILES
         for i in fileList:
@@ -183,21 +197,24 @@ class pRAID:
     
     def repair(fName, fileList, storageLocation):
         
-        fileList
-        
         validPart = open(os.path.join(storageLocation, fileList[0]), "rb")
         parity = open (os.path.join(storageLocation,fileList[1]), "rb")
         
         # Define the list of possible inputs
-        possibleParts = set([0, 1, "p"])
+        possibleParts = ["0", "1", "p"]
         
-        # Determine which input was not chosen
-        partList = set([fileList[0][-1],fileList[1][-1]])
+        partList = [fileList[0][-1],fileList[1][-1]]
+    
+        for part in possibleParts:
+            if part not in partList:
+                recoveredPart = part
+                break
         
-        for i in possibleParts:
-            if i not in partList:
-               recoveredPart = i 
+            
         
+            
+            
+        print(recoveredPart)
     
         with open(os.path.join(storageLocation,f"{fName}-{recoveredPart}"), "wb") as repairedFile:
             
@@ -212,6 +229,8 @@ class pRAID:
                     
                 #WRITE THE RECOVERED DATA ON THE RECOVERING FILE
                 repairedFile.write(parityChunk)
+                
+                
                 #print(validData)
                 if not validData or not parityData:
                     break
@@ -220,7 +239,7 @@ class pRAID:
 
             
         validPart.close()
-        parity.close()
+        parity.close() 
         
     def merge(fName, partList,storageLocation):
         fileList = [] # a list to keep track of the opened part files
@@ -280,15 +299,20 @@ class pRAID:
             i.close()  
 
 def main():
-    fName = "test.jpg"
-    raid = pRAID()
-    fileList = ['test.jpg-0', 'test.jpg-1']
-    #print(raid.split(fName,"splitStorage"))
+    fName = "test50mb"
+    #fName = "test50mb"
+    # raid = pRAID()
+    fileList = ['test50mb-0', 'test50mb-1']
+    #fileList = ['vid.mp4-0', 'vid.mp4-1']
     
-    #raid.repair(fName,0,"p", "splitStorage")
+    print(25*MB)
+    #['test50mb.pdf-0', 'test50mb.pdf-1', 'test50mb.pdf-p']
+    #print(pRAID.split(fName,"splitStorage"))
+    
+    #pRAID.repair(fName, fileList, "splitStorage")
     #fileList = ['hello.txt-0', 'hello.txt-1', 'hello.txt-p']
     #fileList = ['tempvid.mp4-0', 'tempvid.mp4-1']
-    raid.merge(fName, fileList,"splitStorage")
+    pRAID.merge(fName, fileList,"splitStorage")
     
     # Setup to easily reuse byte sizes
     
