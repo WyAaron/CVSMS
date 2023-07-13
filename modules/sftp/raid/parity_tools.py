@@ -12,12 +12,15 @@ from CVSMS.models import  Files,storageNodeInfo
 
 
 class thread_get(threading.Thread):
+    
     def __init__(self, obj):
         # execute the base constructor
         threading.Thread.__init__(self)
         self.obj = obj
 
     def run(self):
+        import time
+        start = time.time()
         file_list = serverDButil.getFileMD(self.obj.FID)
         #SORT FILE LIST BY NAME
         file_list = sorted(file_list, key=lambda x: x['fName'])
@@ -135,7 +138,8 @@ class thread_get(threading.Thread):
                 fileList = [fileMD_nodeList_tuple[0]["fileMD"]["fName"], fileMD_nodeList_tuple[1]["fileMD"]["fName"]]
                 raid_module.pRAID.merge(self.obj.fName, fileList, cwd)
             
-        
+        end  = time.time()
+        print(end - start)
 
 class thread_unraid(threading.Thread):
     def __init__(self, obj):
@@ -212,10 +216,63 @@ class thread_unraid(threading.Thread):
                 print(fileList)
                 raid_module.pRAID.repair(self.obj.fName, fileList, cwd)
                 
-                
                 fileList = [f"{self.obj.fName}-0",f"{self.obj.fName}-1"]
                 raid_module.pRAID.merge(self.obj.fName, fileList, cwd)
-      
+
+                
+                fName = self.obj.fName
+            
+                storageNode = NodeGetTools.get_storage_nodes([fName], cwd)
+                
+                
+                if storageNode:
+                    storageNode = storageNode[0]["storage_info"]
+                    #GET FILE START BYTE
+                    start = storageNode["Gap"][0]
+                    storageNode = storageNode["storageNode"]
+                    
+                    
+                    message = {
+                        "fName": fName,
+                        "FID" : self.obj.FID,
+                        "cwd" : cwd,
+                        "size" : self.obj.actualSize,
+                        "start" : start,
+                        "command":"upload"
+                    }
+                    
+                
+                    success = True
+                    print(storageNode)
+                    try: 
+                        sftp_tools.put(message, storageNode)
+                        
+                    except Exception as e:
+                        print(e)
+                        success = False
+                    
+                    if not success:
+                        print("SFTP of merged file failed")
+                        
+                    else:
+                        
+                        print("SFTP upload of merged file success")
+                        
+                        #REMOVE OLD DATA OF FILE FROM DB
+                        serverDButil.delMD(self.obj.FID)
+                        
+                        #ADD THE NEW UNRAIDED DATA TO DB
+                        Files.objects.create(
+                        owner = self.obj.owner, 
+                        fName = self.obj.fName,
+                        file = self.obj.file,
+                        actualSize = self.obj.actualSize,
+                        FID = self.obj.FID,
+                        start = start,
+                        isCached = False,
+                        SID = storageNode["SID"])
+                    
+                    shutil.rmtree(cwd)
             
         else:
             
@@ -284,6 +341,7 @@ class thread_unraid(threading.Thread):
                     
                 
                     success = True
+                    print(storageNode)
                     try: 
                         sftp_tools.put(message, storageNode)
                         
