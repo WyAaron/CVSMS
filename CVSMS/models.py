@@ -7,9 +7,9 @@ from urllib.parse import quote
 
 
 def file_path(instance, filename):
-    cleaned_filename = get_valid_filename(filename)
-    url_encoded_filename = quote(cleaned_filename)
-    print(f"cleaned:{cleaned_filename}, url{url_encoded_filename}")
+    # cleaned_filename = get_valid_filename(filename)
+    url_encoded_filename = quote(filename)
+    print(f"url:{url_encoded_filename}")
     return f'{instance.FID}/{url_encoded_filename}'
 
 
