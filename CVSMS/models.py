@@ -6,7 +6,9 @@ from django.utils.text import get_valid_filename
 
 
 def file_path(instance, filename):
-    return f'{instance.FID}/{get_valid_filename(filename)}'
+    filename = get_valid_filename(filename)
+    print(filename)
+    return f'{instance.FID}/{filename}'
 
 
 class Files(models.Model):
