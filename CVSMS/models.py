@@ -1,11 +1,12 @@
 from django.db import models
 from django.contrib.auth.models import User
+from django.utils.text import get_valid_filename
 
 # Create your models here.
 
 
 def file_path(instance, filename):
-    return f'{instance.FID}/{filename}'
+    return f'{instance.FID}/{get_valid_filename(filename)}'
 
 
 class Files(models.Model):
