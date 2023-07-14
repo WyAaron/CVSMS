@@ -189,7 +189,7 @@ def file_Retreive_view(request, id):
     cwd = os.path.dirname(obj.file.path)
     url = obj.file.url
 
-    fName = serverDButil.getFileMD(obj.FID)[0]["fName"]
+    fName = serverDButil.getFileMD(obj.FID)[0]["file"]
 
    
     # TODO CONNECTED STORAGE NODES
