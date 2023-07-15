@@ -2,15 +2,13 @@ from django.db import models
 from django.contrib.auth.models import User
 from django.utils.text import get_valid_filename
 from urllib.parse import quote
-
+import re
 # Create your models here.
 
 
+
 def file_path(instance, filename):
-    # cleaned_filename = get_valid_filename(filename)
-    url_encoded_filename = quote(filename)
-    print(f"url:{url_encoded_filename}")
-    return f'{instance.FID}/{url_encoded_filename}'
+    return f'{instance.FID}/{filename}'
 
 
 class Files(models.Model):

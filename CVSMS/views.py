@@ -110,15 +110,15 @@ def file_Upload_view(request):
             # # #TODO CONNECTED STORAGE NODES
             obj = Files.objects.create(
                 owner=request.user,
-                fName=request.FILES["file"],
+                fName=request.FILES["file"].name,
                 actualSize=request.FILES["file"].size,
                 isCached=False)
-
             # print(request.FILES["file"].name)
 
             serverDButil.addFID(obj.id, obj.id)
 
             obj = Files.objects.get(id=obj.id)
+            print(f'file -  {request.FILES["file"]}')
             obj.file = request.FILES['file']
 
             obj.save()
@@ -191,6 +191,7 @@ def file_Retreive_view(request, id):
 
     fName = serverDButil.getFileMD(obj.FID)[0]["fName"]
 
+
    
     # TODO CONNECTED STORAGE NODES
 
@@ -259,10 +260,10 @@ def file_Retreive_view(request, id):
         if os.path.getsize(os.path.join(cwd, fName)) == obj.actualSize:
             if request.method == "GET":
                 file_download = get_object_or_404(Files, pk=id)
-                print(id)
+                file_download.file.name = f'{id}/{file_download.fName}'
                 response = HttpResponse(
-                    file_download.file, content_type='multipart/form-data')
-                response['Content-Disposition'] = f'attactments; fileName="{file_download.fName}"'
+                   file_download.file  , content_type='application/octet-stream')
+                response['Content-Disposition'] = f'attactments; filename = {file_download.fName} '
                 return response
         else:  # file is downloading from storage node
             messages.info(request, f'file is downloading')
