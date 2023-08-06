@@ -28,7 +28,7 @@ def terminate_process_by_pid(pid):
     subprocess.run(cmd, shell=True)
 
 
-def main():
+def addAdminAccount():
     """Run administrative tasks."""
     os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'trydjango.settings')
 
@@ -44,7 +44,7 @@ def main():
 
 
 if __name__ == '__main__':
-    # main()
+    # addAdminAccount()
     try:
         manager = multiprocessing.Manager()
         main_process_event = manager.Event()
